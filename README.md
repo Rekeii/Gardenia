@@ -12,7 +12,7 @@
 - **Harvest Distribution**: Efficiently divide harvested crops among beneficiaries.
 
 > [!CAUTION] 
-> **Note!!**: Currently, the program ONLY includes a **Login System** that authenticates users and displays basic volunteer information upon successful login.
+> **Note,** currently, the program ONLY includes a **Login System** that authenticates users and displays basic volunteer information upon successful login.
 
 ---
 
