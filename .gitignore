@@ -1,0 +1,7 @@
+# Will ignore all the files and directories listed here.
+.venv/
+
+__pycache__/
+
+*.pyc
+
