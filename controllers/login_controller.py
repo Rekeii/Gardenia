@@ -9,7 +9,10 @@ class LoginController:
         if user_info:
             return user_info
         return None
+<<<<<<< HEAD
 
     def update_password(self, username, new_password):
         return self.user_model.update_password(username, new_password)
 
+=======
+>>>>>>> refs/remotes/origin/prod1

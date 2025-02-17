@@ -18,6 +18,7 @@ class UserModel:
             print(e)
 
     def authenticate(self, username, password):
+<<<<<<< HEAD
         user = self.login_collection.find_one({'user': username, 'password': password})
         if user:
             if user['role'] == 'admin':
@@ -83,3 +84,17 @@ class UserModel:
             {'$set': {'password': new_password}}
         )
         return result.modified_count > 0
+=======
+        # Find the user in the login collection
+        user = self.login_collection.find_one({'user': username, 'password': password})
+        if user:
+            # Fetch volunteer details using the 'id' field
+            volunteer = self.volunteers_collection.find_one({'user': username})
+            if volunteer:
+                return {
+                    'role': 'volunteer',  # Default role for now
+                    'name': volunteer['name'],
+                    'specialization': volunteer['specialization']
+                }
+        return None
+>>>>>>> refs/remotes/origin/prod1
