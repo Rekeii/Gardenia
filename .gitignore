@@ -1,6 +1,16 @@
+<<<<<<< HEAD
+# Will ignore all the files and directories listed here.
+.venv/
+
+__pycache__/
+
+*.pyc
+
+=======
 # Ignore all files in the ff. directory:
 __pycache__/
 
 .venv/
 
 *.pyc
+>>>>>>> refs/remotes/origin/prod1

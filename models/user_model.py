@@ -18,6 +18,73 @@ class UserModel:
             print(e)
 
     def authenticate(self, username, password):
+<<<<<<< HEAD
+        user = self.login_collection.find_one({'user': username, 'password': password})
+        if user:
+            if user['role'] == 'admin':
+                return {
+                    'role': user['role'],
+                    'username': username,
+                    'name': 'Admin',  # Default name for admin
+                    'specialization': 'N/A'  # No specialization for admin
+                }
+            else:
+                volunteer = self.volunteers_collection.find_one({'user': username})
+                if volunteer:
+                    return {
+                        'role': user['role'],
+                        'username': username,
+                        'name': volunteer['name'],
+                        'specialization': volunteer['specialization']
+                    }
+                else:
+                    # Return default values if volunteer record not found
+                    return {
+                        'role': user['role'],
+                        'username': username,
+                        'name': 'Volunteer',
+                        'specialization': 'Not Assigned'
+                    }
+        return None
+
+    
+    def create_user(self, username, password, name, specialization, role):
+        # Check if the user already exists
+        if self.login_collection.find_one({'user': username}):
+            return False, "User already exists."
+
+        # Validate specialization (only for volunteers)
+        valid_specializations = ["Pomology", "Olericulture", "Floriculture", "Landscaping", "PlantationCrops", "Versatile"]
+        if role == 'volunteer' and specialization not in valid_specializations:
+            return False, "Invalid specialization."
+
+        # Create login document
+        login_doc = {
+            'user': username,
+            'password': password,
+            'role': role
+        }
+        self.login_collection.insert_one(login_doc)
+
+        # Create volunteer document only for volunteers
+        if role == 'volunteer':
+            volunteer_doc = {
+                'user': username,
+                'name': name,
+                'specialization': specialization
+            }
+            self.volunteers_collection.insert_one(volunteer_doc)
+
+        return True, "User created successfully."
+
+
+    def update_password(self, username, new_password):
+        result = self.login_collection.update_one(
+            {'user': username},
+            {'$set': {'password': new_password}}
+        )
+        return result.modified_count > 0
+=======
         # Find the user in the login collection
         user = self.login_collection.find_one({'user': username, 'password': password})
         if user:
@@ -30,3 +97,4 @@ class UserModel:
                     'specialization': volunteer['specialization']
                 }
         return None
+>>>>>>> refs/remotes/origin/prod1
