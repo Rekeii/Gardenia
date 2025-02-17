@@ -68,6 +68,9 @@ Specialization: Floriculture
 > password: admin
 
 
+> [!CAUTION] 
+> **Back to login,** button is not functional. Pages are not yet connected.
+
 ---
 
 ## Roadmap of functions:
