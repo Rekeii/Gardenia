@@ -15,71 +15,85 @@ class UserModel:
             self.client.admin.command('ping')
             print("Pinged your deployment. You successfully connected to MongoDB!")
         except Exception as e:
-            print(e)
+            print(f"Connection error: {str(e)}")
 
     def authenticate(self, username, password):
-        user = self.login_collection.find_one({'user': username, 'password': password})
-        if user:
-            if user['role'] == 'admin':
-                return {
-                    'role': user['role'],
-                    'username': username,
-                    'name': 'Admin',  # Default name for admin
-                    'specialization': 'N/A'  # No specialization for admin
-                }
-            else:
-                volunteer = self.volunteers_collection.find_one({'user': username})
-                if volunteer:
+        try:
+            user = self.login_collection.find_one({'user': username, 'password': password})
+            if user:
+                if user['role'] == 'admin':
                     return {
                         'role': user['role'],
                         'username': username,
-                        'name': volunteer['name'],
-                        'specialization': volunteer['specialization']
+                        'name': 'Admin',
+                        'specialization': 'N/A'
                     }
                 else:
-                    # Return default values if volunteer record not found
-                    return {
-                        'role': user['role'],
-                        'username': username,
-                        'name': 'Volunteer',
-                        'specialization': 'Not Assigned'
-                    }
-        return None
+                    volunteer = self.volunteers_collection.find_one({'user': username})
+                    if volunteer:
+                        return {
+                            'role': user['role'],
+                            'username': username,
+                            'name': volunteer['name'],
+                            'specialization': volunteer['specialization']
+                        }
+                    else:
+                        return {
+                            'role': user['role'],
+                            'username': username,
+                            'name': 'Volunteer',
+                            'specialization': 'Not Assigned'
+                        }
+            return None
+        except Exception as e:
+            print(f"Authentication error: {str(e)}")
+            return None
 
-    
     def create_user(self, username, password, name, specialization, role):
-        # Check if the user already exists
-        if self.login_collection.find_one({'user': username}):
-            return False, "User already exists."
+        try:
+            # Check if the username already exists in login or volunteers
+            if self.login_collection.find_one({'user': username}) or self.volunteers_collection.find_one({'user': username}):
+                return False, "Username already exists."
 
-        # Validate specialization (only for volunteers)
-        valid_specializations = ["Pomology", "Olericulture", "Floriculture", "Landscaping", "PlantationCrops", "Versatile"]
-        if role == 'volunteer' and specialization not in valid_specializations:
-            return False, "Invalid specialization."
+            # Validate specialization for volunteers
+            valid_specializations = ["Pomology", "Olericulture", "Floriculture", "Landscaping", "PlantationCrops", "Versatile"]
+            if role == 'volunteer' and specialization not in valid_specializations:
+                return False, "Invalid specialization."
 
-        # Create login document
-        login_doc = {
-            'user': username,
-            'password': password,
-            'role': role
-        }
-        self.login_collection.insert_one(login_doc)
-
-        # Create volunteer document only for volunteers
-        if role == 'volunteer':
-            volunteer_doc = {
+            # Create user in login collection
+            login_doc = {
                 'user': username,
-                'name': name,
-                'specialization': specialization
+                'password': password,
+                'role': role
             }
-            self.volunteers_collection.insert_one(volunteer_doc)
+            self.login_collection.insert_one(login_doc)
 
-        return True, "User created successfully."
+            # Create volunteer document if the role is volunteer
+            if role == 'volunteer':
+                volunteer_doc = {
+                    'user': username,
+                    'name': name,
+                    'specialization': specialization
+                }
+                self.volunteers_collection.insert_one(volunteer_doc)
 
+            return True, "User created successfully."
+
+        except Exception as e:
+            print(f"Error creating user: {str(e)}")
+            return False, f"Failed to create user: {str(e)}"
 
     def update_password(self, username, new_password):
-        result = self.login_collection.update_one(
-            {'user': username},
-            {'$set': {'password': new_password}}
-        )
-        return result.modified_count > 0
+        try:
+            # Update password in login collection
+            update_result = self.login_collection.update_one(
+                {'user': username},
+                {'$set': {'password': new_password}}
+            )
+            if update_result.modified_count == 1:
+                return True, "Password updated successfully."
+            else:
+                return False, "User not found or password not updated."
+        except Exception as e:
+            print(f"Password update error: {str(e)}")
+            return False, f"Failed to update password: {str(e)}"

@@ -11,5 +11,6 @@ class LoginController:
         return None
 
     def update_password(self, username, new_password):
-        return self.user_model.update_password(username, new_password)
+        success, message = self.user_model.update_password(username, new_password)
+        return success, message
 
