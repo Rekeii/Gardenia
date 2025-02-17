@@ -63,6 +63,11 @@ Welcome, Mikz Lugtu!
 Specialization: Floriculture
 
 
+> [!NOTE] For admin:
+> username: admin
+> password: admin
+
+
 ---
 
 ## Roadmap of functions:
