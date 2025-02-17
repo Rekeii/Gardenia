@@ -11,7 +11,7 @@
 - **Inventory Management**: Track gardening tools, seeds, compost, and other resources.
 - **Harvest Distribution**: Efficiently divide harvested crops among beneficiaries.
 
-**Note**: Currently, the program ONLY includes a **Login System** that authenticates users and displays basic volunteer information upon successful login.
+> :warning: **Note!!**: Currently, the program ONLY includes a **Login System** that authenticates users and displays basic volunteer information upon successful login.
 
 ---
 
