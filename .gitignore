@@ -1,0 +1,6 @@
+# Ignore all files in the ff. directory:
+__pycache__/
+
+.venv/
+
+*.pyc
