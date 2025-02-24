@@ -10,30 +10,24 @@ def user_view(page: ft.Page, user_data):
     page.theme_mode = 'dark'
     
     # Create controls
-    title = ft.Text("VOLUNTEER DASHBOARD", size=30, weight=ft.FontWeight.BOLD, color='#77DD77')
-    welcome_msg = ft.Text(
-        value=f"Welcome, {user_data.get('name', 'Volunteer')}!",
-        size=20,
-        color='#77DD77'
+    title = ft.Container(
+        content=ft.Row(
+            [
+                ft.Image(src="Gardenia-main/assets/Bee.png", height=30), 
+                ft.Text("VOLUNTEER DASHBOARD", size=30, weight=ft.FontWeight.BOLD, color='#77DD77')
+            ]
+        )
     )
-    specialization_msg = ft.Text(
-        value=f"Specialization: {user_data.get('specialization', 'Not Assigned')}",
-        size=18,
-        color='white'
-    )
-    txt_new_password = ft.TextField(
-        label="New Password",
-        password=True,
-        width=500,
-        border_color='white'
-    )
+    
+    welcome_msg = ft.Text(value=f"Welcome, {user_data.get('name', 'Volunteer')}!", size=20, color='#77DD77')
+    specialization_msg = ft.Text(value=f"Specialization: {user_data.get('specialization', 'Not Assigned')}", size=18, color='white')
+    txt_new_password = ft.TextField(label="New Password", password=True, width=500, border_color='white')
     result = ft.Text(value="")
     
-    # Create the main view
-    volunteer_dashboard = ft.View(
-        "/user",
-        controls=[
-            title,
+    # Create Tabs
+    management_tab = ft.Column()
+    user_tab = ft.Column(
+        [
             welcome_msg,
             ft.Text(value="\n"),
             specialization_msg,
@@ -44,14 +38,35 @@ def user_view(page: ft.Page, user_data):
                 color='#77DD77',
                 on_click=lambda e: update_password(volunteer_dashboard, txt_new_password)
             ),
-            ft.TextButton(
-                text="Back to Login",
-                on_click=lambda e: go_back(page)
-            ),
             result
         ],
-        vertical_alignment=ft.MainAxisAlignment.CENTER,
+        alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
+    )
+    
+    #Compile Tabs
+    tabs = ft.Tabs(
+        selected_index = 0,
+        animation_duration= 300,
+        tabs=[
+            ft.Tab(text="Plant Management", content=management_tab),
+            ft.Tab(text="User Management", content=user_tab),
+            ft.Tab(text="Others", content=ft.Text("To be added"))
+        ],
+        expand=1
+    )
+
+    # Create the main view
+    volunteer_dashboard = ft.View(
+        "/user",
+        controls=[
+                title,
+                tabs,
+                ft.TextButton(
+                    text="Back to Login",
+                    on_click=lambda e: go_back(page)
+                )
+            ]
     )
     
     # Add the view to the page
@@ -69,4 +84,7 @@ def update_password(volunteer_dashboard, txt_new_password):
 def go_back(page: ft.Page):
     if len(page.views) > 1:
         page.views.pop()
-        page.update()
+        
+    from views.login_view import login_view
+    login_view(page)  
+    page.update()

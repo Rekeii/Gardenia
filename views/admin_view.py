@@ -10,38 +10,26 @@ def admin_view(page: ft.Page, user_info=None):
     page.theme_mode = 'dark'
     
     # Create controls
-    title = ft.Text("ADMIN DASHBOARD", size=50, weight=ft.FontWeight.BOLD, color='#77DD77')
-    txt_username = ft.TextField(
-        label="Username",
-        width=500,
-        border_color='white'
+    title = ft.Container(
+        content=ft.Row(
+            [
+                ft.Image(src="Gardenia-main/assets/QueenBee.png", height=30), 
+                ft.Text("ADMIN DASHBOARD", size=30, weight=ft.FontWeight.BOLD, color='#77DD77')
+            ]
+        )
     )
-    txt_password = ft.TextField(
-        label="Password",
-        password=True,
-        width=500,
-        border_color='white'
-    )
-    txt_name = ft.TextField(
-        label="Name",
-        width=500,
-        border_color='white'
-    )
-    txt_specialization = ft.TextField(
-        label="Specialization",
-        width=500,
-        border_color='white'
-    )
-    chk_is_admin = ft.Checkbox(
-        label="Is Admin?"
-    )
+    
+    txt_username = ft.TextField(label="Username", width=500, border_color='white')
+    txt_password = ft.TextField(label="Password", password=True, width=500, border_color='white')
+    txt_name = ft.TextField(label="Name", width=500, border_color='white')
+    txt_specialization = ft.TextField(label="Specialization", width=500, border_color='white')
+    chk_is_admin = ft.Checkbox(label="Is Admin?")
     result = ft.Text(value="")
     
-    # Create the main view
-    admin_dashboard = ft.View(
-        "/admin",
-        controls=[
-            title,
+    # Create Tabs
+    volunteer_tab = ft.Column()
+    user_tab = ft.Column(
+        [
             txt_username,
             txt_password,
             txt_name,
@@ -52,14 +40,35 @@ def admin_view(page: ft.Page, user_info=None):
                 color='#77DD77',
                 on_click=lambda e: create_user(txt_username, txt_password, txt_name, txt_specialization, chk_is_admin, admin_dashboard)
             ),
-            ft.TextButton(
-                text="Back to Login",
-                on_click=lambda e: go_back(page)
-            ),
             result
         ],
-        vertical_alignment=ft.MainAxisAlignment.CENTER,
+        alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
+    )
+    
+    #Compile Tabs
+    tabs = ft.Tabs(
+        selected_index = 0,
+        animation_duration= 300,
+        tabs=[
+            ft.Tab(text="Plant Management", content=volunteer_tab),
+            ft.Tab(text="User Management", content=user_tab),
+            ft.Tab(text="Others", content=ft.Text("To be added"))
+        ],
+        expand=1
+    )
+
+
+    # Create the main view
+    admin_dashboard = ft.View(
+        "/admin",
+        controls=[title,
+                  tabs,
+                  ft.TextButton(
+                        text="Back to Login",
+                        on_click=lambda e: go_back(page)
+                    )
+                ]
     )
     
     # Add the view to the page
@@ -81,4 +90,7 @@ def create_user(txt_username, txt_password, txt_name, txt_specialization, chk_is
 def go_back(page: ft.Page):
     if len(page.views) > 1:
         page.views.pop()
-        page.update()
+    
+    from views.login_view import login_view
+    login_view(page)  
+    page.update()

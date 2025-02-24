@@ -16,7 +16,14 @@ def login_view(page: ft.Page):
     login_interface = ft.View(
         "/login",
         controls=[
-            ft.Text("GARDENIA", size=100, weight=ft.FontWeight.BOLD, color='#77DD77'),
+            ft.Row(
+                [
+                ft.Image(src="Gardenia-main/assets/Basic.png", height=100),
+                ft.Text("GARDENIA", size=100, weight=ft.FontWeight.BOLD, color='#77DD77'),
+                ft.Image(src="Gardenia-main/assets/Basic2.png", height=100)
+                ],
+                alignment=ft.MainAxisAlignment.CENTER
+            ),
             ft.TextField(
                 label="Username",
                 width=500,
