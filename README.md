@@ -28,6 +28,25 @@ The login system is the first step to accessing Gardenia. It includes the follow
 - **Restricted Access**:
   - Only authenticated users (admins or volunteers) can access the system.
 
+## Plant Management Functionality
+
+The plant management can be accessed by both volunteers and admins.
+
+- **Update Plant Health:**
+  - Volunteers and administrators can update the health status of plants.
+  - Health statuses include options like "Healthy," "Needs Water," "Pests Detected," and "Ready for Harvest."
+- **Add New Plants:**
+Volunteers can add new plants to the system with essential details including:
+  - Plant name
+  - Plant type (e.g., fruit, vegetable, flower, herb)
+  - Planting date
+  - Estimated harvest date
+  - Location
+  - Initial health status
+- **Log Volunteer Observations:**
+Volunteers can record observations about plant conditions.
+  - Observations are stored with timestamps for tracking changes and monitoring progress.
+
 ---
 
 ## How to Run the Program on Ubuntu WSL
@@ -68,8 +87,6 @@ Specialization: Floriculture
 > password: admin
 
 
-> [!CAUTION] 
-> **Back to login,** button is not functional. Pages are not yet connected.
 
 ---
 
