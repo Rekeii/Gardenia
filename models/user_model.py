@@ -3,8 +3,10 @@ from pymongo.server_api import ServerApi
 
 class UserModel:
     def __init__(self, db_name='gardenia', login_collection='login', volunteers_collection='volunteers'):
-        self.mongodb_client = MongoDBClient()
-        self.db = self.mongodb_client.client[db_name]
+        # MongoDB connection setup
+        uri = "mongodb+srv://gardenia_1:106lgardenia@cluster0.pmlml.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+        self.client = MongoClient(uri, server_api=ServerApi('1'))
+        self.db = self.client[db_name]
         self.login_collection = self.db[login_collection]
         self.volunteers_collection = self.db[volunteers_collection]
 
@@ -32,16 +34,18 @@ class UserModel:
                         return {
                             'role': user['role'],
                             'username': username,
-                            'name': volunteer['name'],
-                            'specialization': volunteer['specialization']
+                            'name': volunteer.get('name', 'Unknown'),
+                            'specialization': volunteer.get('specializations', 'Not Assigned')  # Using get() to prevent errors
                         }
                     else:
+                        print("DEBUG: No volunteer entry found!")
                         return {
                             'role': user['role'],
                             'username': username,
                             'name': 'Volunteer',
                             'specialization': 'Not Assigned'
                         }
+
             return None
         except Exception as e:
             print(f"Authentication error: {str(e)}")
@@ -71,7 +75,7 @@ class UserModel:
                 volunteer_doc = {
                     'user': username,
                     'name': name,
-                    'specialization': specialization
+                    'specializations': specialization
                 }
                 self.volunteers_collection.insert_one(volunteer_doc)
 
@@ -81,26 +85,17 @@ class UserModel:
             print(f"Error creating user: {str(e)}")
             return False, f"Failed to create user: {str(e)}"
 
-    def update_password(self, username: str, new_password: str):
-        result = self.login_collection.update_one(
-            {"user": username},
-            {"$set": {"password": new_password}}
-        )
-        return result.matched_count == 1, "Password updated successfully!"
-
-    def get_user_info(self, username: str):
+    def update_password(self, username, new_password):
         try:
-            user = self.login_collection.find_one({'user': username})
-            if not user:
-                return None
-            user_info = {
-                'role': user['role'],
-                'user': username,
-                'name': user.get('name', 'Volunteer'),
-                'specialization': user.get('specialization', 'Not Assigned')
-            }
-            return user_info
+            # Update password in login collection
+            update_result = self.login_collection.update_one(
+                {'user': username},
+                {'$set': {'password': new_password}}
+            )
+            if update_result.modified_count == 1:
+                return True, "Password updated successfully."
+            else:
+                return False, "User not found or password not updated."
         except Exception as e:
-            print(f"Error retrieving user info: {str(e)}")
-            return None
-        
+            print(f"Password update error: {str(e)}")
+            return False, f"Failed to update password: {str(e)}"
