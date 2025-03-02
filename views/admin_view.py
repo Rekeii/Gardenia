@@ -9,7 +9,7 @@ def admin_view(page: ft.Page, user_info=None):
     # Set theme mode for the page
     page.theme_mode = 'dark'
     
-    ## Create controls
+    # Create controls
     title = ft.Container(
         content=ft.Row(
             [
@@ -19,69 +19,39 @@ def admin_view(page: ft.Page, user_info=None):
         )
     )
     
-    # VolunteerTab controls
-    user_model = UserModel()
-    volunteers_collection = user_model.volunteers_collection
-    volunteer_data = list(volunteers_collection.aggregate([
-        {
-            "$project": {
-                "_id": 0,
-                "user": "$user",
-                "name": "$name",
-                "specializations": "$specializations",    
-                "Assigned Tasks": "$Assigned Tasks"
-            }
-        }
-    ]))
-
-    # Usertab controls
     txt_username = ft.TextField(label="Username", width=500, border_color='white')
     txt_password = ft.TextField(label="Password", password=True, width=500, border_color='white')
     txt_name = ft.TextField(label="Name", width=500, border_color='white')
     txt_specialization = ft.TextField(label="Specialization", width=500, border_color='white')
-    chk_is_admin = ft.Checkbox(label="Is Admin?", )
+    chk_is_admin = ft.Checkbox(label="Is Admin?")
     result = ft.Text(value="")
     
-    ## Create Tabs
-    volunteer_tab = ft.Container(
-        ft.DataTable(
-            columns=[
-                ft.DataColumn(ft.Text("Username")),
-                ft.DataColumn(ft.Text("Name")),
-                ft.DataColumn(ft.Text("Specialization")),
-                ft.DataColumn(ft.Text("Assigned Tasks")),
-            ],
-            rows=[ft.DataRow(cells=[ft.DataCell(ft.Text(str(item[field]))) for field in item.keys()])for item in volunteer_data]
-        )
-    )
-
-    user_tab = ft.Container(
-        ft.Column(
-            [
-                txt_username,
-                txt_password,
-                txt_name,
-                txt_specialization,
-                chk_is_admin,
-                ft.ElevatedButton(
-                    text="Create User",
-                    color='#77DD77',
-                    on_click=lambda e: create_user(txt_username, txt_password, txt_name, txt_specialization, chk_is_admin, admin_dashboard)
-                ),
-                result
-            ],
-            alignment=ft.MainAxisAlignment.CENTER,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER
-        )
+    # Create Tabs
+    volunteer_tab = ft.Column()
+    user_tab = ft.Column(
+        [
+            txt_username,
+            txt_password,
+            txt_name,
+            txt_specialization,
+            chk_is_admin,
+            ft.ElevatedButton(
+                text="Create User",
+                color='#77DD77',
+                on_click=lambda e: create_user(txt_username, txt_password, txt_name, txt_specialization, chk_is_admin, admin_dashboard)
+            ),
+            result
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
     
-    
-    ## Compile Tabs
+    #Compile Tabs
     tabs = ft.Tabs(
         selected_index = 0,
         animation_duration= 300,
         tabs=[
-            ft.Tab(text="Volunteer Management", content=volunteer_tab),
+            ft.Tab(text="Plant Management", content=volunteer_tab),
             ft.Tab(text="User Management", content=user_tab),
             ft.Tab(text="Others", content=ft.Text("To be added"))
         ],
