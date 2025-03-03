@@ -4,8 +4,8 @@ from typing import Optional
 from volunteer_Class import Volunteer
 
 class Frequency (Enum):
-    Daily = "Daily"
-    Monthly = "Monthly"
+    Daily = "daily"
+    Monthly = "monthly
 
 class TaskStatus(Enum):
     Pending = "Pending"
@@ -17,11 +17,11 @@ class Task:
         self.taskName = taskName
         self.frequency = frequency
         self.assignedVolunteer: Optional [Volunteer] = None
-        self.status = TaskStatus
+        self.status = status
 
     def markComplete(self):
         self.status = TaskStatus.Completed
 
     def assignVolunteer(self, volunteer:Volunteer):
         self.assignedVolunteer = volunteer
-        
+        volunteer.assign_task(self)
