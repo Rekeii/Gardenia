@@ -1,12 +1,12 @@
 from enum import Enum
 
 class Specialization(str, Enum):
-    Pomology = "Pomology"
-    Olericulture = "Olericulture"
-    Floriculture = "Floriculture"
-    Landscaping = "Landscaping"
-    PlantationCrops = "Plantation_Crops"
-    Versatile= "Versatile"
+    Pomology = "pomology"
+    Olericulture = "olericulture"
+    Floriculture = "floriculture"
+    Landscaping = "landscaping"
+    PlantationCrops = "plantation_crops"
+    Versatile= "versatile"
 
 
 class Volunteer:
