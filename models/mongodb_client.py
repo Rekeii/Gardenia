@@ -25,6 +25,8 @@ class MongoDBClient:
         self.volunteers_collection = self.gardenia_db['volunteers']
         self.login_collection = self.gardenia_db['login']
         self.harvests_collection = self.gardenia_db['harvests']
+        self.inventory_collection = self.gardenia_db['inventory']  # Add this line
+        self.tasks_collection = self.gardenia_db['tasks'] #Add this line
 
         try:
             self.client.admin.command('ping')
@@ -68,6 +70,21 @@ class MongoDBClient:
         except Exception as e:
             print(f"MongoDB connection error: {str(e)}")
             return
+    def get_inventory_collection(self): #add this
+        try:
+            self.client.admin.command('ping')
+            print("Successfully connected to MongoDB inventory_collection")
+            return self.inventory_collection
+        except Exception as e:
+            print(f"MongoDB Connection error: {str(e)}")
+            return
+    def get_tasks_collection(self): #add this
+        try:
+            self.client.admin.command('ping')
+            print("Successfully connected to Task Collection")
+            return self.tasks_collection
+        except Exception as e:
+            print(f"MongoDB connection error: {str(e)}")
 
     def close_connection(self):
         if self.client:
