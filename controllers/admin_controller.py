@@ -1,3 +1,4 @@
+# controllers/admin_controller.py
 from models.user_model import UserModel
 
 class AdminController:

@@ -2,9 +2,6 @@ import flet as ft
 from controllers.login_controller import LoginController
 
 def user_view(page: ft.Page, user_data):
-    # Ensure user_data is available in page.data
-    if 'user_data' not in page.data:
-        page.data['user_data'] = user_data
     
     # Set theme mode for the page
     page.theme_mode = 'dark'
@@ -97,7 +94,7 @@ def user_view(page: ft.Page, user_data):
             ft.ElevatedButton(
                 text="Update Password",
                 color='#77DD77',
-                on_click=lambda e: update_password(volunteer_dashboard, txt_new_password)
+                on_click=lambda e: update_password(volunteer_dashboard, txt_new_password, result)
             ),
             result
         ],
@@ -136,12 +133,17 @@ def user_view(page: ft.Page, user_data):
 
 
 
-def update_password(volunteer_dashboard, txt_new_password):
+def update_password(volunteer_dashboard, txt_new_password, result):
     new_password = txt_new_password.value
     controller = LoginController()
     username = volunteer_dashboard.page.data['user_data']['username']
     success, message = controller.update_password(username, new_password)
-    volunteer_dashboard.controls[-1].value = message
+    result.value = message
+
+    #clear text field after updating
+    if success:
+        txt_new_password.value = ""
+
     volunteer_dashboard.page.update()
 
 def go_back(page: ft.Page):
