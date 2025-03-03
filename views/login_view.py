@@ -2,12 +2,13 @@ import flet as ft
 from controllers.login_controller import LoginController
 from views.admin_view import admin_view  # Assuming you'll create this
 from views.user_view import user_view
+import asyncio
 
-def login_view(page: ft.Page):
+async def login_view(page: ft.Page):  # Make login_view async
     # Initialize login data
     login_data = {
-        'username': '',
-        'password': ''
+    'username': '',
+    'password': ''
     }
 
     page.theme_mode = 'dark'
@@ -42,7 +43,7 @@ def login_view(page: ft.Page):
             ft.ElevatedButton(
                 text="Login",
                 color='#77DD77',
-                on_click=lambda e: login_click(login_data, page, error_text)  # Pass error_text
+                on_click=lambda e: asyncio.run(login_click(login_data, page, error_text))  # Pass error_text
             ),
             error_text  # Add the error_text control here
         ],
@@ -50,10 +51,10 @@ def login_view(page: ft.Page):
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
     page.views.append(login_interface)
-    page.update()
+    page.update()  # Await page.update()
 
 
-def login_click(login_data, page, error_text):  # Receive error_text
+async def login_click(login_data, page, error_text):  # Make login_click async
     controller = LoginController()
     user_info = controller.login(login_data['username'], login_data['password'])
     if user_info:
@@ -67,11 +68,13 @@ def login_click(login_data, page, error_text):  # Receive error_text
         page.data['user_data'] = user_info
         # Navigate to appropriate view
         if user_info['role'] == 'admin':
-            admin_view(page, user_info)
+            await admin_view(page, user_info) # await, added
         else:
-            user_view(page, user_info)
-        page.update()
+            await user_view(page, user_info)  # Await user_view
+        #await page.update()  # Await page.update() <---- NO AWAIT HERE
+        page.update() # <--- CORRECTED
         error_text.value = ""  # Clear any previous error
     else:
         error_text.value = "Invalid username or password"  # Set the error message
-        page.update()
+        await page.update() # Await page.update() for errors
+
