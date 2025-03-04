@@ -1,56 +1,85 @@
 import flet as ft
 from controllers.login_controller import LoginController
-from views.admin_view import admin_view  # Assuming you'll create this
+from views.admin_view import admin_view
 from views.user_view import user_view
 import asyncio
 
-async def login_view(page: ft.Page):  # Make login_view async
+async def login_view(page: ft.Page):
     # Initialize login data
     login_data = {
-    'username': '',
-    'password': ''
+        'username': '',
+        'password': ''
     }
 
     page.theme_mode = 'dark'
 
     # Use a dedicated ft.Text control for error messages
-    error_text = ft.Text(value="")
+    error_text = ft.Text(value="", color="red")
 
-    login_interface = ft.View(
-        "/login",
-        controls=[
-            ft.Row(
-                [
-                ft.Image(src="Gardenia-main/assets/Basic.png", height=100),
-                ft.Text("GARDENIA", size=100, weight=ft.FontWeight.BOLD, color='#77DD77'),
-                ft.Image(src="Gardenia-main/assets/Basic2.png", height=100)
-                ],
-                alignment=ft.MainAxisAlignment.CENTER
-            ),
-            ft.TextField(
-                label="Username",
-                width=500,
-                border_color='white',
-                on_change=lambda e: login_data.update({'username': e.control.value})
-            ),
-            ft.TextField(
-                label="Password",
-                password=True,
-                width=500,
-                border_color='white',
-                on_change=lambda e: login_data.update({'password': e.control.value})
-            ),
-            ft.ElevatedButton(
-                text="Login",
-                color='#77DD77',
-                on_click=lambda e: asyncio.run(login_click(login_data, page, error_text))  # Pass error_text
-            ),
-            error_text  # Add the error_text control here
-        ],
-        vertical_alignment=ft.MainAxisAlignment.CENTER,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER
+    # Background Image Container
+    bg_image = ft.Container(
+        ft.Row([
+            ft.Image(src="bg.png", fit=ft.ImageFit.CONTAIN),
+            ft.Image(src="bg.png", fit=ft.ImageFit.CONTAIN),
+        ])
     )
-    page.views.append(login_interface)
+
+    # Login Interface
+    login_interface = ft.Container(
+        content=ft.Column(
+            [
+                ft.Row(
+                    [
+                        ft.Image(src="assets/plant.png", height=100),
+                        ft.Text("GARDENIA", size=100, weight=ft.FontWeight.BOLD, color='#77DD77'),
+                        ft.Image(src="assets/grass.png", height=100)
+                    ],
+                    alignment=ft.MainAxisAlignment.CENTER
+                ),
+                ft.TextField(
+                    label="Username",
+                    width=500,
+                    border_color='white',
+                    on_change=lambda e: login_data.update({'username': e.control.value})
+                ),
+                ft.TextField(
+                    label="Password",
+                    password=True,
+                    width=500,
+                    border_color='white',
+                    on_change=lambda e: login_data.update({'password': e.control.value})
+                ),
+                ft.ElevatedButton(
+                    text="Login",
+                    color='#77DD77',
+                    on_click=lambda e: asyncio.run(login_click(login_data, page, error_text))
+                ),
+                error_text  # Show error message below button
+            ],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            expand=True
+        ),
+        gradient=ft.LinearGradient(
+            begin=ft.alignment.center_left,
+            end=ft.alignment.center_right,
+            colors=["transparent", "#D9000000", "black", "#D9000000", "transparent"]
+        ),
+        expand=True
+    )
+
+    # Stack everything together
+    page.views.append(
+        ft.View(
+            "/login",
+            controls=[
+                ft.Stack([
+                    bg_image,        # Background Image
+                    login_interface   # Login Box
+                ], expand=True)
+            ]
+        )
+    )
     page.update()  # Await page.update()
 
 

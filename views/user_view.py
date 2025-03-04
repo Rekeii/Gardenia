@@ -11,7 +11,7 @@ async def user_view(page: ft.Page, user_data):
     title = ft.Container(
         content=ft.Row(
             [
-                ft.Image(src="Gardenia-main/assets/Bee.png", height=30),
+                ft.Image(src="assets/bee.png", height=30),
                 ft.Text("VOLUNTEER DASHBOARD", size=30, weight=ft.FontWeight.BOLD, color='#77DD77')
             ]
         )
@@ -112,9 +112,10 @@ async def user_view(page: ft.Page, user_data):
         selected_index = 0,
         animation_duration= 300,
         tabs=[
-            ft.Tab(text="Plant Management", content=plant_tab),
-            ft.Tab(text="User Management", content=user_tab),
-            ft.Tab(text="Others", content=ft.Text("To be added"))
+            ft.Tab(icon="GRASS",content=plant_tab),
+            ft.Tab(icon="KEY_SHARP", content=user_tab),
+            ft.Tab(icon="CONSTRUCTION_SHARP", content=ft.Text("To be added")),
+            ft.Tab(icon="INVENTORY", content=ft.Text("To be added")),
         ],
         expand=1
     )
