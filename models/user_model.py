@@ -1,5 +1,6 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from models.mongodb_client import MongoDBClient
 
 class UserModel:
     def __init__(self, db_name='gardenia', login_collection='login', volunteers_collection='volunteers'):
@@ -8,12 +9,6 @@ class UserModel:
         self.login_collection = self.db[login_collection]
         self.volunteers_collection = self.db[volunteers_collection]
 
-        # Test the connection
-        try:
-            self.client.admin.command('ping')
-            print("Pinged your deployment. You successfully connected to MongoDB!")
-        except Exception as e:
-            print(f"Connection error: {str(e)}")
 
     def authenticate(self, username, password):
         try:
@@ -23,26 +18,26 @@ class UserModel:
                     return {
                         'role': user['role'],
                         'username': username,
-                        'name': 'Admin',
+                        'name': 'Admin',  # Admin info directly
                         'specialization': 'N/A'
                     }
-                else:
+                else:  # It's a volunteer
                     volunteer = self.volunteers_collection.find_one({'user': username})
                     if volunteer:
                         return {
                             'role': user['role'],
                             'username': username,
-                            'name': volunteer['name'],
-                            'specialization': volunteer['specialization']
+                            'name': volunteer['name'],        # Get name from volunteers
+                            'specialization': volunteer['specializations']  # Get specialization from volunteers, changed specializations to specialization
                         }
                     else:
-                        return {
+                         return {
                             'role': user['role'],
                             'username': username,
-                            'name': 'Volunteer',
-                            'specialization': 'Not Assigned'
+                            'name': 'Volunteer',       # Default if no volunteer doc
+                            'specialization': 'Not Assigned'  # Default
                         }
-            return None
+            return None  # User not found
         except Exception as e:
             print(f"Authentication error: {str(e)}")
             return None
@@ -71,7 +66,7 @@ class UserModel:
                 volunteer_doc = {
                     'user': username,
                     'name': name,
-                    'specialization': specialization
+                    'specializations': specialization #changed specialization to specializations
                 }
                 self.volunteers_collection.insert_one(volunteer_doc)
 
@@ -82,25 +77,54 @@ class UserModel:
             return False, f"Failed to create user: {str(e)}"
 
     def update_password(self, username: str, new_password: str):
-        result = self.login_collection.update_one(
-            {"user": username},
-            {"$set": {"password": new_password}}
-        )
-        return result.matched_count == 1, "Password updated successfully!"
+        try:
+            result = self.login_collection.update_one(
+                {"user": username},
+                {"$set": {"password": new_password}}
+            )
+            if result.matched_count == 1:
+                return True, "Password updated successfully!"
+            else:
+                return False, "User not found or password not updated." # More specific message
+        except Exception as e:
+            print(f"Error updating password: {e}")
+            return False, f"Failed to update password: {e}"
+
 
     def get_user_info(self, username: str):
         try:
             user = self.login_collection.find_one({'user': username})
             if not user:
                 return None
-            user_info = {
-                'role': user['role'],
-                'user': username,
-                'name': user.get('name', 'Volunteer'),
-                'specialization': user.get('specialization', 'Not Assigned')
-            }
-            return user_info
+
+            if user['role'] == 'admin':
+                user_info = {
+                    'role': user['role'],
+                    'user': username,
+                    'name': 'Admin',
+                    'specialization': 'N/A'
+                }
+                return user_info
+            else:  # It's a volunteer
+                volunteer = self.volunteers_collection.find_one({'user': username})
+                if volunteer:
+                    user_info = {
+                        'role': user['role'],
+                        'user': username,
+                        'name': volunteer['name'],
+                        'specialization': volunteer['specializations']
+                    }
+                    return user_info
+                else:
+                    user_info = {
+                        'role': user['role'],
+                        'user': username,
+                        'name': 'Volunteer',
+                        'specialization': 'Not Assigned'
+                    }
+                    return user_info
+
+
         except Exception as e:
             print(f"Error retrieving user info: {str(e)}")
             return None
-        
