@@ -1,5 +1,5 @@
 # Gardenia: Community Garden Management System
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIqeHa70qt+zSs4eN4EyLun/Xh+BR0gPmJv4yeuN7khb mjapponce@mymail.mapua.edu.ph
+
 
 ## Overview
 
