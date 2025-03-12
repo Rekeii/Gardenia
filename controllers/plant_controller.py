@@ -46,7 +46,7 @@ class PlantController:
             except ValueError as e:
                  return False, f"Incorrect Plant Type or Health Status Input: {e}"
 
-            # Create a PlantModel instance.  Do the conversion *here*, not in the view.
+            # Create a PlantModel instance.
             plant_model = PlantModel(
                 name=plant_data['name'],
                 plant_type=plant_type_enum,  # Use the Enum
