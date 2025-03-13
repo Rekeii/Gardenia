@@ -1,3 +1,4 @@
+# volunteer_model.py (Corrected)
 from enum import Enum
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -17,17 +18,17 @@ class Frequency(str, Enum):
 
 class TaskStatus(str, Enum):
     Pending = "Pending"
-    InProgress = "In Progress"  # Corrected typo
+    InProgress = "In Progress"
     Completed = "Completed"
 
-class Task:  # Updated to this since no need for forward declaration
+class Task:
     def __init__(self, taskName: str, frequency: Frequency,
-                 assignedVolunteerId: Optional[str] = None,  # Store ID
+                 assignedVolunteerId: Optional[str] = None,
                  status: TaskStatus = TaskStatus.Pending,
                  _id: Optional[ObjectId] = None):
         self.taskName = taskName
         self.frequency = frequency
-        self.assignedVolunteerId = assignedVolunteerId  # Store the volunteer's ID
+        self.assignedVolunteerId = assignedVolunteerId
         self.status = status
         self._id = _id
 
@@ -44,6 +45,7 @@ class Task:  # Updated to this since no need for forward declaration
         if self._id:
             data['_id'] = self._id
         return data
+
     @classmethod
     def from_dict(cls, data:Dict):
         return Task(
@@ -56,23 +58,23 @@ class Task:  # Updated to this since no need for forward declaration
 
 class Volunteer:
     def __init__(self, name: str, specialization: Specialization,
-                 tasks_assigned: Optional[List[str]] = None,  # Store task IDs
+                 tasks_assigned: Optional[List[str]] = None,
                  _id: Optional[ObjectId] = None):
         self.name = name
         self.specialization = specialization
-        self.tasks_assigned = tasks_assigned or []  # List of task IDs
+        self.tasks_assigned = tasks_assigned or []
         self._id = _id
 
     def assignTask(self, task_id: str):
         self.tasks_assigned.append(task_id)
 
     def logFindings(self, notes: str):
-        print(f"Findings logged by {self.name}: {notes}")  #Function for logging findings authorship
+        print(f"Findings logged by {self.name}: {notes}")
 
     def to_dict(self) -> Dict:
         data = {
             "name": self.name,
-            "specialization": self.specialization.value,
+            "specializations": self.specialization.value,  # Store lowercase
             "tasks_assigned": self.tasks_assigned,
         }
         if self._id:
@@ -81,21 +83,19 @@ class Volunteer:
 
     @classmethod
     def from_dict(cls, data: Dict):
-
         return Volunteer(
-            name = data.get('name', "Unknown volunteer"),
-            specialization= Specialization(data.get('specialization', 'versatile')),
-            tasks_assigned= data.get('tasks_assigned', []),
-            _id = data.get('_id')
+            name=data.get('name', "Unknown volunteer"),
+            specialization=Specialization(data.get('specializations', 'versatile').lower()),  # Lowercase here
+            tasks_assigned=data.get('tasks_assigned', []),
+            _id=data.get('_id')
         )
 
-class Schedule: #can integrate this into Volunteer Controller
+class Schedule:
     def __init__(self):
         self.scheduled_tasks: List[Task] = []
 
     def generate_schedule(self):
-        print("Schedule generated.")  # Temporary Placeholder
+        print("Schedule generated.")
 
     def assign_volunteers(self):
-        print("Volunteers assigned to schedule.")  # Temporary Placeholder
-
+        print("Volunteers assigned to schedule.")
