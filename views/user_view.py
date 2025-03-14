@@ -1,11 +1,9 @@
-# views/user_view.py (Modified)
 import flet as ft
 from controllers.login_controller import LoginController
 from controllers.plant_controller import PlantController
 from models.plant_model import PlantModel, PlantHealth
-import asyncio
 from views.plant_log_view import plant_log_view  # Import the new view
-
+import asyncio
 
 async def user_view(page: ft.Page, user_data):
     page.theme_mode = 'dark'
@@ -35,11 +33,10 @@ async def user_view(page: ft.Page, user_data):
         ],
         rows=[]
     )
+
     async def refresh_plants_table():
         plants = await plant_controller.get_plants()
         plant_table.rows.clear()
-        
-        #loop = asyncio.get_event_loop()  # Capture the event loop here
         for plant in plants:
             plant_id_str = str(plant._id)
             latest_observation = "No Log Entries"
@@ -51,7 +48,6 @@ async def user_view(page: ft.Page, user_data):
             async def show_plant_log(e, plant_id=plant_id_str):
                 await plant_log_view(page, plant_id)
 
-            # Create status dropdown with display names and enum values
             status_options = [
                 ft.dropdown.Option(
                     text=status.value.replace("_", " ").title(),
@@ -72,7 +68,7 @@ async def user_view(page: ft.Page, user_data):
                     cells=[
                         ft.DataCell(ft.Column([
                             ft.Text(plant.name),
-                            ft.Text(plant.plant_type.value)
+                            ft.Text(plant.plant_type.value, italic=True)
                         ])),
                         ft.DataCell(ft.Column([
                             ft.Text(f"Planted on: {plant.planting_date.strftime('%m/%d/%Y')}" 
@@ -92,29 +88,17 @@ async def user_view(page: ft.Page, user_data):
 
     async def handle_status_change(e):
         try:
-            # Directly access page from the event
             plant_id = e.control.data
             new_status = PlantHealth(e.control.value)
-            
             success, msg = await plant_controller.update_plant_health(plant_id, new_status)
             if success:
-                print("Status updated successfully")
-                await refresh_plants_table()
+                print(f"Status updated to {new_status.value}!")
             else:
-                e.control.page.snack_bar = ft.SnackBar(
-                    content=ft.Text(f"Error: {msg}"),
-                    action="OK"
-                )
-                e.control.page.update()
-                
-        except Exception as e:
-            print(f"Error: {str(e)}")
-            e.control.page.snack_bar = ft.SnackBar(
-                content=ft.Text("Failed to update status"),
-                action="OK"
-            )
-            e.control.page.update()
-
+                print(f"Error: {msg}")
+        except Exception as ex:
+            print("Failed to update status")
+        finally:
+            await refresh_plants_table()
 
     await refresh_plants_table()
 
@@ -148,44 +132,41 @@ async def user_view(page: ft.Page, user_data):
         )
     )
 
-    plant_tab = ft.Column([plant_table], scroll=ft.ScrollMode.AUTO)
+    plant_tab = ft.Column([
+        plant_table
+    ], scroll=ft.ScrollMode.AUTO)
 
     welcome_msg = ft.Text(value=f"Welcome, {user_data.get('name', 'Volunteer')}!", size=20, color='#77DD77')
     specialization_msg = ft.Text(value=f"Specialization: {user_data.get('specialization', 'Not Assigned')}", size=18, color='white')
-    txt_new_password = ft.TextField(label="New Password", password=True, width=500, border_color='white')
-    result = ft.Text(value="")
-    
-    async def handle_update_password(e):
-    # Async handler for password updates
-        try:
-            new_password = txt_new_password.value
-            if not new_password.strip():
-                result.value = "Password cannot be empty"
-                result.color = ft.colors.RED
-                await page.update()
-                return
 
-            login_controller = LoginController()
-            username = e.page.data['user_data']['username']
-            
-            success, message = await login_controller.update_password(username, new_password)
-            
-            result.value = message
-            result.color = ft.colors.GREEN if success else ft.colors.RED
-            if success:
-                txt_new_password.value = ""
-                
-            await page.update()
-            
-        except Exception as e:
-            print(f"Password update error: {str(e)}")
-            page.show_snack_bar(ft.SnackBar(
-                content=ft.Text("Failed to update password"),
-                bgcolor=ft.colors.RED_200
-            ))
+    login_controller = LoginController()
+    result = ft.Text()
+    txt_new_password = ft.TextField(label="New Password", password=True, width=500)
+
+    def update_password_handler(e):
+        new_password = txt_new_password.value.strip()
+        if not new_password:
+            result.value = "Password cannot be empty"
+            result.color = ft.colors.RED
+        else:
+            try:
+                success, msg = asyncio.run(login_controller.update_password(
+                    username=user_data['username'],
+                    new_password=new_password
+                ))
+                if success:
+                    result.value = "Password updated successfully!"
+                    result.color = ft.colors.GREEN
+                    txt_new_password.value = ""
+                else:
+                    result.value = msg
+                    result.color = ft.colors.RED
+            except Exception as ex:
+                result.value = f"Error: {str(ex)}"
+                result.color = ft.colors.RED
+        page.update()
 
     async def handle_back_button(e):
-        """Async handler for back button"""
         if len(page.views) > 1:
             page.views.pop()
         await login_view(page)
@@ -201,19 +182,18 @@ async def user_view(page: ft.Page, user_data):
             ft.ElevatedButton(
                 text="Update Password",
                 color='#77DD77',
-                on_click=lambda e: asyncio.create_task(handle_update_password(e))
+                on_click=update_password_handler
             ),
-
             result
         ],
         alignment=ft.MainAxisAlignment.CENTER,
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
     tabs = ft.Tabs(
-        selected_index = 0,
-        animation_duration= 300,
+        selected_index=0,
+        animation_duration=300,
         tabs=[
-            ft.Tab(icon="GRASS",content=plant_tab),
+            ft.Tab(icon="GRASS", content=plant_tab),
             ft.Tab(icon="KEY_SHARP", content=user_tab),
             ft.Tab(icon="CONSTRUCTION_SHARP", content=ft.Text("To be added")),
             ft.Tab(icon="INVENTORY", content=ft.Text("To be added")),
@@ -221,25 +201,20 @@ async def user_view(page: ft.Page, user_data):
         expand=1
     )
 
-
     volunteer_dashboard = ft.View(
         "/user",
         controls=[
-                title,
-                tabs,
-                ft.TextButton(
-                    text="Back to Login",
-                    on_click=lambda e: asyncio.run(go_back(page))
-                )
-            ]
+            title,
+            tabs,
+            ft.TextButton(
+                text="Back to Login",
+                on_click=lambda e: asyncio.run(go_back(page))
+            )
+        ]
     )
 
-
-
     page.views.append(volunteer_dashboard)
-    
     page.update()
-
 
 async def go_back(page: ft.Page):
     if len(page.views) > 1:
@@ -248,6 +223,3 @@ async def go_back(page: ft.Page):
     from views.login_view import login_view
     await login_view(page)
     page.update()
-    
-
-    return
