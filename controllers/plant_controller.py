@@ -76,18 +76,17 @@ class PlantController:
         except Exception as e:
             return False, f"Database error: {str(e)}"
 
-    async def update_plant_health(self, plant_id: str, new_health_status: PlantHealth) -> tuple[bool, str]:
-        loop = asyncio.get_running_loop()
+    async def update_plant_health(self, plant_id: str, new_status: PlantHealth) -> tuple[bool, str]:
         try:
-            # Use run_in_executor
+            loop = asyncio.get_running_loop()  # Use get_running_loop()
             result = await loop.run_in_executor(
                 None,
                 self.plants_collection.update_one,
                 {'_id': ObjectId(plant_id)},
-                {'$set': {'health_status': new_health_status.value}}
+                {'$set': {'health_status': new_status.value}}
             )
             if result.modified_count == 1:
-                return True, f"Plant health updated to '{new_health_status.value}'"
+                return True, f"Plant health updated to '{new_status.value}'"
             else:
                 return False, "Plant not found or health not updated."
         except Exception as e:

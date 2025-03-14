@@ -10,7 +10,14 @@ class LoginController:
             return user_info
         return None
 
-    def update_password(self, username, new_password):
-        success, message = self.user_model.update_password(username, new_password)
+    async def update_password(self, username, new_password):
+        """Asynchronous password update handler"""
+        loop = asyncio.get_event_loop()
+        success, message = await loop.run_in_executor(
+            None, 
+            self.user_model.update_password, 
+            username, 
+            new_password
+        )
         return success, message
 

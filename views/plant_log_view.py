@@ -167,7 +167,7 @@ async def plant_log_view(page: ft.Page, plant_id: str):
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=20,
-            scroll=ft.ScrollMode.AUTO  # Enable scrolling
+            scroll=ft.ScrollMode.AUTO  
         ),
         padding=ft.padding.symmetric(40, 60),
         width=1200,
