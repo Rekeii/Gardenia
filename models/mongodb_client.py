@@ -70,7 +70,7 @@ class MongoDBClient:
         except Exception as e:
             print(f"MongoDB connection error: {str(e)}")
             return
-    def get_inventory_collection(self): #add this
+    def get_inventory_collection(self): 
         try:
             self.client.admin.command('ping')
             print("Successfully connected to MongoDB inventory_collection")
@@ -78,7 +78,7 @@ class MongoDBClient:
         except Exception as e:
             print(f"MongoDB Connection error: {str(e)}")
             return
-    def get_tasks_collection(self): #add this
+    def get_tasks_collection(self): 
         try:
             self.client.admin.command('ping')
             print("Successfully connected to Task Collection")

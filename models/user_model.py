@@ -1,14 +1,11 @@
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
+#user_model
 from models.mongodb_client import MongoDBClient
 
 class UserModel:
-    def __init__(self, db_name='gardenia', login_collection='login', volunteers_collection='volunteers'):
+    def __init__(self):
         self.mongodb_client = MongoDBClient()
-        self.db = self.mongodb_client.client[db_name]
-        self.login_collection = self.db[login_collection]
-        self.volunteers_collection = self.db[volunteers_collection]
-
+        self.login_collection = self.mongodb_client.get_login_collection()  # Updated to use method
+        self.volunteers_collection = self.mongodb_client.get_volunteers_collection()  # Updated to use method
 
     def authenticate(self, username, password):
         try:
@@ -18,26 +15,26 @@ class UserModel:
                     return {
                         'role': user['role'],
                         'username': username,
-                        'name': 'Admin',  # Admin info directly
+                        'name': 'Admin', 
                         'specialization': 'N/A'
                     }
-                else:  # It's a volunteer
+                else:
                     volunteer = self.volunteers_collection.find_one({'user': username})
                     if volunteer:
                         return {
                             'role': user['role'],
                             'username': username,
-                            'name': volunteer['name'],        # Get name from volunteers
-                            'specialization': volunteer['specializations']  # Get specialization from volunteers, changed specializations to specialization
+                            'name': volunteer['name'],
+                            'specialization': volunteer['specializations']
                         }
                     else:
-                         return {
+                        return {
                             'role': user['role'],
                             'username': username,
-                            'name': 'Volunteer',       # Default if no volunteer doc
-                            'specialization': 'Not Assigned'  # Default
+                            'name': 'Volunteer',
+                            'specialization': 'Not Assigned'
                         }
-            return None  # User not found
+            return None
         except Exception as e:
             print(f"Authentication error: {str(e)}")
             return None
@@ -66,7 +63,7 @@ class UserModel:
                 volunteer_doc = {
                     'user': username,
                     'name': name,
-                    'specializations': specialization #changed specialization to specializations
+                    'specializations': specialization 
                 }
                 self.volunteers_collection.insert_one(volunteer_doc)
 
@@ -76,19 +73,34 @@ class UserModel:
             print(f"Error creating user: {str(e)}")
             return False, f"Failed to create user: {str(e)}"
 
-    def update_password(self, username: str, new_password: str):
+    def update_password(self, username: str, new_password: str) -> tuple[bool, str]:
+        """Update password in database"""
+        if not self._validate_password(new_password):
+            return False, "Password too weak"
+        
         try:
+            # Update operation
             result = self.login_collection.update_one(
                 {"user": username},
-                {"$set": {"password": new_password}}
+                {"$set": {"password": self._hash_password(new_password)}}
             )
+            
             if result.matched_count == 1:
                 return True, "Password updated successfully!"
             else:
-                return False, "User not found or password not updated." # More specific message
+                return False, "User not found"
+            
         except Exception as e:
-            print(f"Error updating password: {e}")
-            return False, f"Failed to update password: {e}"
+            print(f"Database error: {str(e)}")
+            return False, "Internal server error"
+    
+    def _validate_password(self, password: str) -> bool:
+        """Add password validation logic here"""
+        return len(password) >= 4  # Simple muna
+    
+    def _hash_password(self, password: str) -> str:
+        """Add proper password hashing here"""
+        return password  # TO-DO: Replace with actual hashing
 
 
     def get_user_info(self, username: str):

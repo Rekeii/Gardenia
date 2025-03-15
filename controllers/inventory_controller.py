@@ -1,64 +1,79 @@
-from models.inventory_model import InventoryItem
+#inventory_controller
+# controllers/inventory_controller.py
+from models.inventory_model import InventoryModel
 from models.mongodb_client import MongoDBClient
-import asyncio
 from bson import ObjectId
-from typing import List, Optional
+from datetime import datetime
+from typing import Optional
 
 class InventoryController:
     def __init__(self):
         self.mongodb_client = MongoDBClient()
-        self.inventory_collection = self.mongodb_client.inventory_collection  # TO-DO: Reformat documents in Inventory
+        self.inventory_collection = self.mongodb_client.inventory_collection
 
-    async def add_item(self, item_name: str, quantity: int, supplier: Optional[str] = None, last_restocked: Optional[str] = None) -> tuple[bool, str]:
-        loop = asyncio.get_running_loop()
+    def add_item(self, name: str, item_type: str, quantity=None, condition=None, updated_by="") -> tuple[bool, str]:
         try:
-            item = InventoryItem(item_name=item_name, quantity=quantity, supplier=supplier, last_restocked=last_restocked)
-            item_dict = item.to_dict()
-            result = await loop.run_in_executor(None, self.inventory_collection.insert_one, item_dict)
-            return True, f"Item '{item_name}' added. ID: {result.inserted_id}"
-        except Exception as e:
-            return False, str(e)
-
-    async def get_item(self, item_id: str) -> Optional[InventoryItem]:
-        loop = asyncio.get_running_loop()
-        try:
-            item_data = await loop.run_in_executor(None, self.inventory_collection.find_one, {'_id': ObjectId(item_id)})
-            if item_data:
-                return InventoryItem.from_dict(item_data)
-            return None
-        except Exception as e:
-            print(f"Error: {e}")
-            return None
-    
-    async def get_all_items(self) -> List[InventoryItem]:
-        loop = asyncio.get_running_loop()
-        try:
-            items = []
-            # Use run_in_executor
-            cursor = await loop.run_in_executor(None, self.inventory_collection.find)
-            for item_data in cursor:
-                items.append(InventoryItem.from_dict(item_data))
-            return items
-        except Exception as e:
-            print(f"Error: {e}")
-            return []
-
-    async def update_quantity(self, item_id: str, new_quantity: int) -> tuple[bool, str]:
-        loop = asyncio.get_running_loop()
-        try:
-            result = await loop.run_in_executor(
-                None,
-                self.inventory_collection.update_one,
-                {'_id': ObjectId(item_id)},
-                {'$set': {'quantity': new_quantity}}
+            new_item = InventoryModel(
+                name=name,
+                item_type=item_type,
+                quantity=quantity,
+                condition=condition,
+                last_updated=datetime.now(),
+                updated_by=updated_by
             )
-            if result.modified_count == 1:
-                return True, "Quantity updated."
-            return False, "Item not found or update failed."
+            # Remove 'await' since this is synchronous
+            self.inventory_collection.insert_one(new_item.to_dict())
+            return True, "Item added successfully"
         except Exception as e:
             return False, str(e)
-    async def close_connection(self) -> None: # make close_connection also async
-        loop = asyncio.get_running_loop()
-        # Use run_in_executor because close() is synchronous
-        await loop.run_in_executor(None, self.mongodb_client.close_connection)
 
+
+    def update_item(self, item_id: str, **kwargs) -> tuple[bool, str]:
+        try:
+            update_data = {
+                "$set": {
+                    "last_updated": datetime.now(),
+                    "updated_by": kwargs.get("updated_by", "")
+                }
+            }
+            if "name" in kwargs:
+                update_data["$set"]["name"] = kwargs["name"]
+            if "item_type" in kwargs:
+                update_data["$set"]["item_type"] = kwargs["item_type"]
+            if "quantity" in kwargs:
+                update_data["$set"]["quantity"] = kwargs["quantity"]
+            if "condition" in kwargs:
+                update_data["$set"]["condition"] = kwargs["condition"]
+
+            self.inventory_collection.update_one(
+                {"_id": ObjectId(item_id)},
+                update_data
+            )
+            return True, "Item updated successfully"
+        except Exception as e:
+            return False, str(e)
+
+    def get_all_items(self) -> list[InventoryModel]:
+        cursor = self.inventory_collection.find()
+        items = list(cursor)
+        return [InventoryModel.from_dict(item) for item in items]
+
+    def get_item_by_id(self, item_id: str) -> Optional[InventoryModel]:
+        try:
+            item_data = self.inventory_collection.find_one({"_id": ObjectId(item_id)})
+            if item_data:
+                return InventoryModel.from_dict(item_data)
+            return None
+        except Exception as e:
+            print(f"Error getting item by ID: {e}")
+            return None
+
+    def delete_item(self, item_id: str) -> tuple[bool, str]:
+        try:
+            result = self.inventory_collection.delete_one({"_id": ObjectId(item_id)})
+            if result.deleted_count == 1:
+                return True, "Item deleted successfully"
+            else:
+                return False, "Item not found"
+        except Exception as e:
+            return False, str(e)

@@ -1,32 +1,48 @@
-from typing import Optional, Dict
+from datetime import datetime
 from bson import ObjectId
+from typing import Optional
 
-class InventoryItem:
-    def __init__(self, item_name: str, quantity: int,
-                 supplier: Optional[str] = None, last_restocked: Optional[str] = None, _id: Optional[ObjectId]=None):
-        self.item_name = item_name
+class InventoryModel:
+    def __init__(
+        self,
+        name: str,
+        item_type: str,
+        quantity: Optional[int] = None,
+        condition: Optional[str] = None,
+        last_updated: datetime = datetime.now(),
+        updated_by: str = "",
+        _id: Optional[ObjectId] = None
+    ):
+        self.name = name
+        self.item_type = item_type
         self.quantity = quantity
-        self.supplier = supplier
-        self.last_restocked = last_restocked
-        self._id = _id;
+        self.condition = condition
+        self.last_updated = last_updated
+        self.updated_by = updated_by
+        self._id = _id
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         data = {
-            "item_name": self.item_name,
+            "name": self.name,
+            "item_type": self.item_type,
             "quantity": self.quantity,
-            "supplier": self.supplier,
-            "last_restocked": self.last_restocked
+            "condition": self.condition,
+            "last_updated": self.last_updated,
+            "updated_by": self.updated_by,
         }
-        if self._id:
-            data['_id'] = self._id
+        # Only include '_id' if it's not None (for existing items)
+        if self._id is not None:
+            data["_id"] = str(self._id)
         return data
-    @classmethod
-    def from_dict(cls, data:Dict):
-        return InventoryItem(
-            item_name = data.get('item_name', 'Unknown Item'),
-            quantity = data.get('quantity', 0),
-            supplier = data.get('supplier'),
-            last_restocked = data.get('last_restocked'),
-            _id = data.get('_id')
-        )
 
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
+            name=data.get("name"),
+            item_type=data.get("item_type"),
+            quantity=data.get("quantity"),
+            condition=data.get("condition"),
+            last_updated=data.get("last_updated"),
+            updated_by=data.get("updated_by"),
+            _id=ObjectId(data.get("_id")) if data.get("_id") else None
+        )
