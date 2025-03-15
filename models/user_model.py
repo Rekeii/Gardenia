@@ -1,10 +1,11 @@
+#user_model
 from models.mongodb_client import MongoDBClient
 
 class UserModel:
     def __init__(self):
         self.mongodb_client = MongoDBClient()
-        self.login_collection = self.mongodb_client.login_collection
-        self.volunteers_collection = self.mongodb_client.volunteers_collection
+        self.login_collection = self.mongodb_client.get_login_collection()  # Updated to use method
+        self.volunteers_collection = self.mongodb_client.get_volunteers_collection()  # Updated to use method
 
     def authenticate(self, username, password):
         try:

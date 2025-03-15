@@ -22,15 +22,18 @@ class InventoryModel:
         self._id = _id
 
     def to_dict(self) -> dict:
-        return {
-            "_id": str(self._id) if self._id else None,
+        data = {
             "name": self.name,
             "item_type": self.item_type,
             "quantity": self.quantity,
             "condition": self.condition,
             "last_updated": self.last_updated,
-            "updated_by": self.updated_by
+            "updated_by": self.updated_by,
         }
+        # Only include '_id' if it's not None (for existing items)
+        if self._id is not None:
+            data["_id"] = str(self._id)
+        return data
 
     @classmethod
     def from_dict(cls, data: dict):

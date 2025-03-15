@@ -1,3 +1,4 @@
+#inventory_controller
 # controllers/inventory_controller.py
 from models.inventory_model import InventoryModel
 from models.mongodb_client import MongoDBClient
@@ -10,8 +11,7 @@ class InventoryController:
         self.mongodb_client = MongoDBClient()
         self.inventory_collection = self.mongodb_client.inventory_collection
 
-    async def add_item(self, name: str, item_type: str, quantity=None,
-                      condition=None, updated_by="") -> tuple[bool, str]:  # Removed status
+    def add_item(self, name: str, item_type: str, quantity=None, condition=None, updated_by="") -> tuple[bool, str]:
         try:
             new_item = InventoryModel(
                 name=name,
@@ -21,12 +21,14 @@ class InventoryController:
                 last_updated=datetime.now(),
                 updated_by=updated_by
             )
-            await self.inventory_collection.insert_one(new_item.to_dict())
+            # Remove 'await' since this is synchronous
+            self.inventory_collection.insert_one(new_item.to_dict())
             return True, "Item added successfully"
         except Exception as e:
             return False, str(e)
 
-    async def update_item(self, item_id: str, **kwargs) -> tuple[bool, str]:
+
+    def update_item(self, item_id: str, **kwargs) -> tuple[bool, str]:
         try:
             update_data = {
                 "$set": {
@@ -43,14 +45,11 @@ class InventoryController:
             if "condition" in kwargs:
                 update_data["$set"]["condition"] = kwargs["condition"]
 
-            result = await self.inventory_collection.update_one(
+            self.inventory_collection.update_one(
                 {"_id": ObjectId(item_id)},
                 update_data
             )
-            if result.modified_count == 1:
-                return True, "Item updated successfully"
-            else:
-                return False, "Item not found"
+            return True, "Item updated successfully"
         except Exception as e:
             return False, str(e)
 

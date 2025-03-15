@@ -1,3 +1,4 @@
+#additem_view
 import flet as ft
 from controllers.inventory_controller import InventoryController
 from models.tool_model import ToolCondition
@@ -6,7 +7,7 @@ async def additem_view(page: ft.Page, user_data):
     controller = InventoryController()
 
     async def close_view(e):  
-        page.go('/user') 
+        page.go('/') 
 
     name_field = ft.TextField(label="Item Name")
     type_dropdown = ft.Dropdown(
@@ -31,15 +32,16 @@ async def additem_view(page: ft.Page, user_data):
 
     result_text = ft.Text("")
 
-    async def save_item(e):
+    def save_item(e):
         try:
             quantity = int(quantity_field.value) if quantity_field.value else None
             if quantity is not None and quantity < 0:
                 result_text.value = "Quantity cannot be negative."
-                await page.update_async()
+                page.update()
                 return
 
-            success, msg = await controller.add_item(
+            # Remove 'await' since add_item is now synchronous
+            success, msg = controller.add_item(
                 name=name_field.value,
                 item_type=type_dropdown.value,
                 quantity=quantity,
@@ -52,11 +54,15 @@ async def additem_view(page: ft.Page, user_data):
                 quantity_field.value = ""
                 type_dropdown.value = None
                 condition_dropdown.value = None
-            else:
-                result_text.value = f"Error: {msg}"
+                
+                # Navigate back to inventory view
+                page.go('/user')
+                
+            page.update()
+            
         except ValueError:
             result_text.value = "Invalid quantity. Please enter a valid number."
-        await page.update_async()
+        
 
     add_item_layout = ft.Column(
         [
@@ -65,7 +71,7 @@ async def additem_view(page: ft.Page, user_data):
             ft.Row(
                 [
                     ft.ElevatedButton("Save", on_click=save_item),
-                    ft.ElevatedButton("Back", on_click=close_view) # close view
+                    #ft.ElevatedButton("Back", on_click=lambda e: page.go('/')) # close view
                 ],
                 alignment=ft.MainAxisAlignment.END
             ),
@@ -74,7 +80,28 @@ async def additem_view(page: ft.Page, user_data):
         tight=True
     )
 
-    return ft.View(  # Return the View object directly
-        "/add_item",
-        controls=[add_item_layout]
+    # Create the AppBar with a back button
+    appbar = ft.AppBar(
+        leading=ft.IconButton(
+            icon=ft.icons.ARROW_BACK,
+            on_click=lambda _: page.go("/user")  # Navigate back to previous view (e.g., inventory)
+        ),
+        title=ft.Text("Add New Item"),
+        center_title=True,
     )
+
+    return ft.View(
+        "/add_item",
+        controls=[add_item_layout],
+        appbar=ft.AppBar(
+            leading=ft.IconButton(
+                icon=ft.icons.ARROW_BACK,
+                on_click=lambda _: page.go("/user")  # Single back button
+            ),
+            title=ft.Text("Add New Item"),
+            center_title=True,
+        ),
+        scroll=ft.ScrollMode.HIDDEN,
+    )
+    
+    

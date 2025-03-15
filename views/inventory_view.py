@@ -1,3 +1,4 @@
+#inventory_view
 import flet as ft
 from controllers.inventory_controller import InventoryController
 from datetime import datetime
@@ -64,9 +65,8 @@ async def inventory_view(page: ft.Page, user_data):
         edit_condition = ft.TextField(label="Condition", value=original_condition)
 
         async def save_changes(e):
-            nonlocal message_text
-
-            success, msg = await controller.update_item(
+            # Remove 'await' for update_item
+            success, msg = controller.update_item(
                 item_id=item_id,
                 name=edit_name.value,
                 item_type=edit_type.value,
@@ -117,7 +117,14 @@ async def inventory_view(page: ft.Page, user_data):
         page.update()
 
     async def go_to_add_item(e):
-        await additem_view(page, user_data)
+        page.route = "/add_item"
+        # Generate the add item view
+        add_view = await additem_view(page, user_data)
+        # Clear existing views and append the new one
+        page.views.clear()
+        page.views.append(add_view)
+        # Update the page
+        await page.update()
 
     inventory_view_column = ft.Column([
         ft.ElevatedButton("Add Item", on_click=go_to_add_item),

@@ -1,5 +1,5 @@
 # views/edit_item_view.py
-# DI PA TAPOS
+# DI PA TAPOS DI PA CONNECTED ULIT
 import flet as ft
 from controllers.inventory_controller import InventoryController
 

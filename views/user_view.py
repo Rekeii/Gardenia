@@ -130,8 +130,13 @@ async def user_view(page: ft.Page, user_data):
     
     async def route_change(e):
         if page.route == "/add_plant":
-            await add_plant_view(page)  # Calls the addplant_view function
+            await addplant_view(page)
+        elif page.route == "/add_item":  # Add this line
+            await additem_view(page, user_data)  # Adjust as needed
+        elif page.route == "/user":
+            await user_view(page, user_data)
         page.update()
+
 
     def view_pop(e):
         page.views.pop()
@@ -140,8 +145,8 @@ async def user_view(page: ft.Page, user_data):
         page.update()
 
     # Assign handlers
-    page.on_route_change = route_change
-    page.on_view_pop = view_pop
+    #page.on_route_change = route_change
+    #page.on_view_pop = view_pop
     
     async def route_change(e):
         if page.route == "/add_plant":
