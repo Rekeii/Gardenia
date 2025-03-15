@@ -69,7 +69,7 @@ Follow these steps to set up and run the Gardenia login system on Ubuntu WSL.
    ```bash
     lsb_release -a
    ```
-   -**For Ubuntu 24.04**:
+    **For Ubuntu 24.04**:
     - Install the following additional packages:
       ``` bash
       sudo apt install libmpv-dev libmpv2
