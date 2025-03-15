@@ -191,8 +191,6 @@ async def admin_view(page: ft.Page, user_info=None):
             ft.Tab(text="Volunteers", icon="PEOPLE", content=volunteer_tab),
             ft.Tab(text="Create User", icon="PERSON_ADD", content=user_tab),
             ft.Tab(text="Plants", icon="GRASS", content=plant_tab),
-            ft.Tab(text="Inventory", icon="CONSTRUCTION_SHARP", content=ft.Text("Inventory")),
-            ft.Tab(text="Harvests", icon="INVENTORY", content=ft.Text("Harvests")),
         ],
         expand=1,
     )
