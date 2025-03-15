@@ -1,14 +1,10 @@
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 from models.mongodb_client import MongoDBClient
 
 class UserModel:
-    def __init__(self, db_name='gardenia', login_collection='login', volunteers_collection='volunteers'):
+    def __init__(self):
         self.mongodb_client = MongoDBClient()
-        self.db = self.mongodb_client.client[db_name]
-        self.login_collection = self.db[login_collection]
-        self.volunteers_collection = self.db[volunteers_collection]
-
+        self.login_collection = self.mongodb_client.login_collection
+        self.volunteers_collection = self.mongodb_client.volunteers_collection
 
     def authenticate(self, username, password):
         try:
@@ -21,23 +17,23 @@ class UserModel:
                         'name': 'Admin', 
                         'specialization': 'N/A'
                     }
-                else:  # It's a volunteer
+                else:
                     volunteer = self.volunteers_collection.find_one({'user': username})
                     if volunteer:
                         return {
                             'role': user['role'],
                             'username': username,
-                            'name': volunteer['name'],        # Get name from volunteers
-                            'specialization': volunteer['specializations']  # Get specialization from volunteers
+                            'name': volunteer['name'],
+                            'specialization': volunteer['specializations']
                         }
                     else:
-                         return {
+                        return {
                             'role': user['role'],
                             'username': username,
-                            'name': 'Volunteer',       # Default if no volunteer doc
-                            'specialization': 'Not Assigned'  # Default
+                            'name': 'Volunteer',
+                            'specialization': 'Not Assigned'
                         }
-            return None  # User not found
+            return None
         except Exception as e:
             print(f"Authentication error: {str(e)}")
             return None
