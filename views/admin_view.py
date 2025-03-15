@@ -204,7 +204,7 @@ async def admin_view(page: ft.Page, user_info=None):
             tabs,
             ft.TextButton(
                 text="Back to Login",
-                on_click=lambda e: go_back(page)
+                on_click=lambda e: asyncio.run(go_back(page))
             )
         ]
     )

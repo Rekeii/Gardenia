@@ -132,7 +132,7 @@ async def user_view(page: ft.Page, user_data):
         if page.route == "/add_plant":
             await addplant_view(page)
         elif page.route == "/add_item":  # Add this line
-            await additem_view(page, user_data)  # Adjust as needed
+            await additem_view(page, user_data)  # type: ignore # Adjust as needed
         elif page.route == "/user":
             await user_view(page, user_data)
         page.update()
@@ -214,7 +214,7 @@ async def user_view(page: ft.Page, user_data):
     async def handle_back_button(e):
         if len(page.views) > 1:
             page.views.pop()
-        await login_view(page)
+        await login_view(page) # type: ignore
         page.update()
 
     user_tab = ft.Column(
@@ -241,10 +241,9 @@ async def user_view(page: ft.Page, user_data):
         selected_index = 0,
         animation_duration= 300,
         tabs=[
-            ft.Tab(icon="GRASS",content=plant_tab),
-            ft.Tab(icon="KEY_SHARP", content=user_tab),
-            ft.Tab(icon="CONSTRUCTION_SHARP", content=ft.Text("To be added")),
-            ft.Tab(icon="INVENTORY", content=inventory_tab),
+            ft.Tab(text="Plants", icon="GRASS",content=plant_tab),
+            ft.Tab(text="User", icon="KEY_SHARP", content=user_tab),
+            ft.Tab(text="Inventory", icon="INVENTORY_SHARP", content=inventory_tab),
         ],
         expand=1
     )
