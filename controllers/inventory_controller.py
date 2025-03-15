@@ -1,7 +1,6 @@
 # controllers/inventory_controller.py
 from models.inventory_model import InventoryModel
 from models.mongodb_client import MongoDBClient
-import asyncio
 from bson import ObjectId
 from datetime import datetime
 from typing import Optional
@@ -44,7 +43,6 @@ class InventoryController:
             if "condition" in kwargs:
                 update_data["$set"]["condition"] = kwargs["condition"]
 
-
             result = await self.inventory_collection.update_one(
                 {"_id": ObjectId(item_id)},
                 update_data
@@ -61,7 +59,6 @@ class InventoryController:
         items = list(cursor)
         return [InventoryModel.from_dict(item) for item in items]
 
-
     def get_item_by_id(self, item_id: str) -> Optional[InventoryModel]:
         try:
             item_data = self.inventory_collection.find_one({"_id": ObjectId(item_id)})
@@ -72,11 +69,9 @@ class InventoryController:
             print(f"Error getting item by ID: {e}")
             return None
 
-    async def delete_item(self, item_id: str) -> tuple[bool, str]:
+    def delete_item(self, item_id: str) -> tuple[bool, str]:
         try:
-            result = await self.inventory_collection.delete_one(
-                {"_id": ObjectId(item_id)}
-            )
+            result = self.inventory_collection.delete_one({"_id": ObjectId(item_id)})
             if result.deleted_count == 1:
                 return True, "Item deleted successfully"
             else:

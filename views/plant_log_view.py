@@ -13,8 +13,12 @@ async def plant_log_view(page: ft.Page, plant_id: str):
 
     log_table = ft.DataTable(
         columns=[
-            ft.DataColumn(ft.Text("Date", style=ft.TextThemeStyle.TITLE_MEDIUM)),
-            ft.DataColumn(ft.Text("Observation", style=ft.TextThemeStyle.TITLE_MEDIUM)),
+            ft.DataColumn(ft.Text("Date", 
+                                  color=ft.Colors.GREEN_200,
+                                  )),
+            ft.DataColumn(ft.Text("Observation", 
+                                  color=ft.Colors.GREEN_200,
+                                  )),
         ],
         rows=[],
         heading_row_color=ft.colors.BLUE_GREY_100,

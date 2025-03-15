@@ -1,11 +1,10 @@
-# views/user_view.py (Revised)
 import flet as ft
 from controllers.login_controller import LoginController
 from controllers.plant_controller import PlantController
 from models.plant_model import PlantModel, PlantHealth
 from views.plant_log_view import plant_log_view
+from views.addplant_view import addplant_view  
 from views.inventory_view import inventory_view
-from views.addplant_view import add_plant_view  
 import asyncio
 
 
@@ -45,17 +44,17 @@ async def user_view(page: ft.Page, user_data):
         plant_table.rows.clear()
         
         for plant in plants:
-            # Get the latest observation, handling empty lists and missing colons safely
+           
             if plant.observations:
                 last_obs = plant.observations[-1]
-                parts = last_obs.split(":", 1)  # Split only once
+                parts = last_obs.split(":", 1)  
                 if len(parts) > 1:
-                    latest_observation = parts[1].strip()  # Get the part after the colon
+                    latest_observation = parts[1].strip()  
                 else:
-                    latest_observation = last_obs  # Use the whole string if no colon
+                    latest_observation = last_obs  
             else:
                 latest_observation = "No Log Entries"
-            # Get id
+            
             plant_id_str = str(plant._id)
 
             async def show_plant_log(e, plant_id=plant_id_str): #added ID
@@ -127,12 +126,39 @@ async def user_view(page: ft.Page, user_data):
 
 
     await refresh_plants_table()
+    
+    
+    async def route_change(e):
+        if page.route == "/add_plant":
+            await add_plant_view(page)  # Calls the addplant_view function
+        page.update()
 
+    def view_pop(e):
+        page.views.pop()
+        top_view = page.views[-1]
+        page.route = top_view.route
+        page.update()
+
+    # Assign handlers
+    page.on_route_change = route_change
+    page.on_view_pop = view_pop
+    
+    async def route_change(e):
+        if page.route == "/add_plant":
+            await addplant_view(page)  
+        elif page.route == "/user":
+            # Rebuild user view to refresh data
+            await user_view(page, user_data)
+        page.update()
+
+    page.on_route_change = route_change
+
+    # Add "Plant Seed" button
     plant_seed = ft.FilledButton(
         text="Plant Seed",
         bgcolor='#9ae69a',
         icon='add',
-       on_click=lambda e: page.go("/add_plant")
+        on_click=lambda _: page.go("/add_plant")
     )
 
     plant_table.rows.append(
@@ -145,14 +171,14 @@ async def user_view(page: ft.Page, user_data):
             ],
         )
     )
+    
+    refresh = ft.IconButton(icon="REFRESH", on_click=page.update())
 
     plant_tab = ft.Column([plant_table], scroll=ft.ScrollMode.AUTO)
 
-    # Rest of your existing code remains unchanged below this line
     welcome_msg = ft.Text(value=f"Welcome, {user_data.get('name', 'Volunteer')}!", size=20, color='#77DD77')
     specialization_msg = ft.Text(value=f"Specialization: {user_data.get('specialization', 'Not Assigned')}", size=18, color='white')
     
-    # Password update section remains unchanged
     login_controller = LoginController()
     result = ft.Text()
     txt_new_password = ft.TextField(label="New Password", password=True, width=500)

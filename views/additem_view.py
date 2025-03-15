@@ -58,7 +58,6 @@ async def additem_view(page: ft.Page, user_data):
             result_text.value = "Invalid quantity. Please enter a valid number."
         await page.update_async()
 
-
     add_item_layout = ft.Column(
         [
             ft.Text("Add New Item", size=24, weight=ft.FontWeight.BOLD),
@@ -79,4 +78,3 @@ async def additem_view(page: ft.Page, user_data):
         "/add_item",
         controls=[add_item_layout]
     )
-
