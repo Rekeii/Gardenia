@@ -26,3 +26,5 @@ class LoginController:
 
     def _validate_password(self, password: str) -> bool:
         return len(password) >= 4
+    
+    

@@ -68,14 +68,13 @@ async def login_view(page: ft.Page):
         expand=True
     )
 
-    # Stack everything together
     page.views.append(
         ft.View(
             "/login",
             controls=[
                 ft.Stack([
-                    bg_image,        # Background Image
-                    login_interface   # Login Box
+                    bg_image,        
+                    login_interface   
                 ], expand=True)
             ]
         )
@@ -100,8 +99,8 @@ async def login_click(login_data, page, error_text):  # Make login_click async
             await admin_view(page, user_info) # await, added
         else:
             await user_view(page, user_info)  # Await user_view
-        #await page.update()  # Await page.update() <---- NO AWAIT HERE
-        page.update() # <--- CORRECTED
+       
+        page.update() 
         error_text.value = ""  # Clear any previous error
     else:
         error_text.value = "Invalid username or password"  # Set the error message

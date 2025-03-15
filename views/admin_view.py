@@ -1,4 +1,3 @@
-# views/admin_view.py
 import flet as ft
 from models.user_model import UserModel
 from controllers.volunteer_controller import VolunteerController

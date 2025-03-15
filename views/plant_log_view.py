@@ -110,8 +110,11 @@ async def plant_log_view(page: ft.Page, plant_id: str):
     async def go_back_to_user_view(e):
         if len(page.views) > 1:
             page.views.pop()
-            page.update()  # Force UI update
-            return
+            if 'user_data' in page.data:
+                from views.user_view import user_view
+                await user_view(page, page.data['user_data'])
+                page.update()  # Force UI update
+                return
 
         # Fallback to manual navigation
         if 'user_data' in page.data:
@@ -121,7 +124,8 @@ async def plant_log_view(page: ft.Page, plant_id: str):
             page.update()
         else:
             print("Error: User data not found, cannot navigate back.")
-
+        
+        
     # Improved UI Layout
     log_view_layout = ft.Container(
         ft.Column(
@@ -167,7 +171,7 @@ async def plant_log_view(page: ft.Page, plant_id: str):
             ],
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=20,
-            scroll=ft.ScrollMode.AUTO  
+            scroll=ft.ScrollMode.AUTO  # Enable scrolling
         ),
         padding=ft.padding.symmetric(40, 60),
         width=1200,

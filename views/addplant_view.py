@@ -1,19 +1,15 @@
-# addplant_view.py
 import flet as ft
 from controllers.plant_controller import PlantController
-from models.plant_model import PlantType, PlantHealth # Import Enums
+from models.plant_model import PlantType, PlantHealth
 import asyncio
 
 async def add_plant_view(page: ft.Page):
-    print("Navigated to Add Plant Page")
-
     plant_controller = PlantController()
 
     name_input = ft.TextField(label="Plant Name")
-    type_input = ft.TextField(label="Plant Type")  # Let the user enter a string
+    type_input = ft.TextField(label="Plant Type")
     date_input = ft.TextField(label="Planting Date (MM/DD/YYYY)")
     harvest_input = ft.TextField(label="Harvest Date (MM/DD/YYYY)")
-    # status_input = ft.TextField(label="Status") #Status Removed
     health_status_input = ft.Dropdown(
         label="Health Status",
         options=[
@@ -21,51 +17,51 @@ async def add_plant_view(page: ft.Page):
             ft.dropdown.Option(PlantHealth.NeedsWater.value),
             ft.dropdown.Option(PlantHealth.PestsDetected.value),
             ft.dropdown.Option(PlantHealth.ReadyForHarvest.value)
-    
         ]
-    ) #dropdown menu for enums suggested
-    location_input = ft.TextField(label = "Location") #Added
-    water_input = ft.TextField(label="Last Date of Watering (MM/DD/YYYY)")
+    )
+    location_input = ft.TextField(label="Location")
+    water_input = ft.TextField(label="Last Watering Date (MM/DD/YYYY)")
     log_input = ft.TextField(label="Plant Log Entry")
-
     result_text = ft.Text("")
+
     async def save_info(e):
-        # Create the dictionary *here* to pass to the controller.
         new_plant = {
             "name": name_input.value,
-            "plant_type": type_input.value,  # Pass the string value
+            "plant_type": type_input.value,
             "planting_date": date_input.value,
             "estimated_harvest_date": harvest_input.value,
-           # "status": status_input.value, #Status removed
-            "health_status": health_status_input.value,  # Get selected value
-            "location" : location_input.value,  # Get Value
+            "health_status": health_status_input.value,
+            "location": location_input.value,
             "last_watered": water_input.value,
             "observations": log_input.value
         }
 
+        success, message = await plant_controller.add_plant(new_plant)
+        result_text.value = message
 
-        success, message = await plant_controller.add_plant(new_plant)  # Pass the dict
-        result_text.value = message  # Display success/error message
         if success:
-           name_input.value = ""
-           type_input.value =""
-           date_input.value =""
-           harvest_input.value =""
-           health_status_input.value =""
-           location_input.value=""
-           water_input.value =""
-           log_input.value =""
+            name_input.value = ""
+            type_input.value = ""
+            date_input.value = ""
+            harvest_input.value = ""
+            health_status_input.value = ""
+            location_input.value = ""
+            water_input.value = ""
+            log_input.value = ""
+            user_data = page.data.get("user_data")  # Retrieve stored user_data
+            await user_view(page, user_data)
+            #page.go("/user")  # Navigate back after saving
+
         page.update()
 
-    # Layout
     add_plant_layout = ft.Column(
         [
             ft.Text("Add a New Plant", size=24, weight=ft.FontWeight.BOLD),
-            name_input, type_input, date_input, harvest_input, health_status_input, location_input, water_input, log_input, #added health and location
+            name_input, type_input, date_input, harvest_input,
+            health_status_input, location_input, water_input, log_input,
             ft.Row(
                 [
-                    ft.ElevatedButton("Save", on_click=save_info),
-                    ft.ElevatedButton("Cancel", on_click=lambda e: page.go("/user"))
+                    ft.ElevatedButton("Save", on_click=lambda e: asyncio.create_task(save_info(e))),
                 ],
                 alignment=ft.MainAxisAlignment.END
             ),
@@ -74,11 +70,9 @@ async def add_plant_view(page: ft.Page):
         tight=True
     )
 
-    # Create the View
     add_plant_page = ft.View(
         "/add_plant",
         controls=[add_plant_layout]
     )
-
     page.views.append(add_plant_page)
     page.update()
