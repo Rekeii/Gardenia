@@ -80,11 +80,12 @@ Follow these steps to set up and run the Gardenia login system on Ubuntu WSL.
 1. Create a suitable directory for cloning the repository. Afterwards, clone the Gardenia Repository. In the Ubuntu Terminal, type the following:
    ```bash
    mkdir GardeniaProject
+   cd GardeniaProject
    git clone https://github.com/Rekeii/gardenia.git
    ```
 2. Navigate to the Cloned Repository. 
    ```bash
-   cd Gardenia
+   cd gardenia
    ```
 3. Create and Activate a Virtual Environment.
    ```bash
@@ -97,7 +98,7 @@ Follow these steps to set up and run the Gardenia login system on Ubuntu WSL.
    ```
 5. Start the application:
    ```bash
-   python main.py
+   python3 main.py
    ```
 6. Use the following credentials to test the login:
   - username: Mikz
