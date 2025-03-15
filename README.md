@@ -57,26 +57,52 @@ Follow these steps to set up and run the Gardenia login system on Ubuntu WSL.
 ### Prerequisites
 
 1. **Ubuntu WSL**: Ensure you have Ubuntu installed on Windows Subsystem for Linux (WSL).
-2. **Python**: Install Python 3.x on your Ubuntu terminal:
+2. **Packages**: Install Essential Packages on your Ubuntu terminal:
    ```bash
    sudo apt update
    sudo apt install python3 python3-pip
+   sudo apt install python3-venv
+   sudo apt install git
+   sudo apt install mpv
    ```
-3. **Dependencies**: Install the dependencies, pymongo and flet.
+3. **Check Ubuntu Version**: Open the terminal. Check your Ubuntu Version:
+   ```bash
+    lsb_release -a
+   ```
+   -**For Ubuntu 24.04**:
+    - Install the following additional packages:
+      ``` bash
+      sudo apt install libmpv-dev libmpv2
+      sudo ln -s /usr/lib/x86_64-linux-gnu/libmpv.so /usr/lib/libmpv.so.1
+      ```
+   
+### Running the Program
+1. Create a suitable directory for cloning the repository. Afterwards, clone the Gardenia Repository. In the Ubuntu Terminal, type the following:
+   ```bash
+   mkdir GardeniaProject
+   git clone https://github.com/Rekeii/gardenia.git
+   ```
+2. Navigate to the Cloned Repository. 
+   ```bash
+   cd Gardenia
+   ```
+3. Create and Activate a Virtual Environment.
+   ```bash
+   python3 - m venv GardeniaProject
+   source GardeniaProject/bin/activate
+   ```
+4. Install the dependencies, pymongo and flet within the actviated Virtual Environment.
    ```bash
    pip install pymongo flet
    ```
-
-### Running the Program
-
-1. Start the application:
+5. Start the application:
    ```bash
    python main.py
    ```
-2. Use the following credentials to test the login:
+6. Use the following credentials to test the login:
   - username: Mikz
   - password: 1234
-3. After successful login, the application will display the volunteer's name and specialization.
+7. After successful login, the application will display the volunteer's name and specialization.
 
 Expected output:
 Welcome, Mikz Lugtu!
