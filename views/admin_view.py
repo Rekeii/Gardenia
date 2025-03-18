@@ -3,6 +3,7 @@ from models.user_model import UserModel
 from controllers.volunteer_controller import VolunteerController
 from controllers.plant_controller import PlantController
 from models.plant_model import PlantModel, PlantType, PlantHealth
+from models.volunteer_model import Volunteer, Specialization
 import asyncio
 
 async def admin_view(page: ft.Page, user_info=None):
@@ -97,12 +98,26 @@ async def admin_view(page: ft.Page, user_info=None):
     txt_username = ft.TextField(label="Username", width=500, border_color='white')
     txt_password = ft.TextField(label="Password", password=True, width=500, border_color='white')
     txt_name = ft.TextField(label="Name", width=500, border_color='white')
-    txt_specialization = ft.TextField(label="Specialization", width=500, border_color='white')
+
+    specialization_options = [
+        ft.dropdown.Option(
+            text=specialization.value.replace("_", " ").title(),
+            key=specialization.value
+        )
+        for specialization in Specialization
+    ]
+
+    specialization_dropdown = ft.Dropdown(
+        options=specialization_options,
+        value=None,
+    )
+
+
     chk_is_admin = ft.Checkbox(label="Is Admin?")
     result_text = ft.Text(value="")
     
     async def create_user_handler(e):
-        if not all([txt_username.value, txt_password.value, txt_name.value, txt_specialization.value]):
+        if not all([txt_username.value, txt_password.value, txt_name.value, specialization_dropdown.value]):
             result_text.value = "Please fill in all fields."
             await e.page.update()
             return
@@ -112,11 +127,11 @@ async def admin_view(page: ft.Page, user_info=None):
         password = txt_password.value
         name = txt_name.value
          # Keep specialization lowercase for consistency with the enum
-        specialization = txt_specialization.value.lower()
+        specialization = specialization_dropdown.value.lower()
         is_admin = chk_is_admin.value
         role = 'admin' if is_admin else 'volunteer'
 
-        success, message = await user_model.create_user(username, password, name, specialization, role)
+        success, message = user_model.create_user(username, password, name, specialization, role)
         result_text.value = message
 
         
@@ -125,7 +140,7 @@ async def admin_view(page: ft.Page, user_info=None):
             txt_username.value = ""
             txt_password.value = ""
             txt_name.value = ""
-            txt_specialization.value = ""
+            specialization_dropdown.value = None
             chk_is_admin.value = False  # Reset the checkbox
 
         # Refresh volunteer data if creation was successful
@@ -165,7 +180,7 @@ async def admin_view(page: ft.Page, user_info=None):
                         txt_username,
                         txt_password,
                         txt_name,
-                        txt_specialization,
+                        specialization_dropdown,
                         chk_is_admin,
                         ft.ElevatedButton(
                             text="Create User",
@@ -208,7 +223,7 @@ async def admin_view(page: ft.Page, user_info=None):
     )
 
     page.views.append(admin_dashboard)
-    await page.update()
+    page.update()
 
 async def go_back(page: ft.Page):
     if len(page.views) > 1:
