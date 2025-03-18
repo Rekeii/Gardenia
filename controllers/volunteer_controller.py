@@ -44,6 +44,16 @@ class VolunteerController:
             print(f"Error: {e}")
             return None
 
+    async def get_volunteer_by_name(self, name: str) -> Optional[Volunteer]:
+        loop = asyncio.get_running_loop()
+        try:
+            volunteer_data = await loop.run_in_executor(None, self.volunteers_collection.find_one, {'name': name})
+            if volunteer_data:
+                return Volunteer.from_dict(volunteer_data)
+            return None
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
 
     async def get_all_volunteers(self) -> List[Volunteer]:
         loop = asyncio.get_running_loop()
@@ -101,7 +111,6 @@ class VolunteerController:
             print(f"Error: {e}")
             return []
 
-
     async def add_task(self, taskName: str, frequency: str, assignedVolunteerId: Optional[str] = None) -> tuple[bool, str]:
         loop = asyncio.get_running_loop()
         try:
@@ -143,7 +152,6 @@ class VolunteerController:
 
         except Exception as e:
             return False, str(e)
-
 
     async def get_task(self, taskID) -> Optional[Task]:
         loop = asyncio.get_running_loop()

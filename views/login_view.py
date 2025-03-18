@@ -87,23 +87,33 @@ async def login_click(login_data, page, error_text):  # Make login_click async
     controller = LoginController()
     user_info = controller.login(login_data['username'], login_data['password'])
     if user_info:
+        # For volunteers, ensure we get the volunteer ID from MongoDB
+        if user_info['role'] != 'admin':
+            volunteer = controller.user_model.volunteers_collection.find_one({'user': login_data['username']})
+            if volunteer:
+                user_info['_id'] = str(volunteer['_id'])
+            else:
+                error_text.value = "Error: Volunteer record not found"
+                page.update()  # Remove await here
+                return
 
         # Clear current views except login
         while len(page.views) > 1:
             page.views.pop()
+            
         # Store user info for navigation
         page.data = user_info
-        # Ensure user_data is available in page.data
         page.data['user_data'] = user_info
+        
         # Navigate to appropriate view
         if user_info['role'] == 'admin':
-            await admin_view(page, user_info) # await, added
+            await admin_view(page, user_info)
         else:
-            await user_view(page, user_info)  # Await user_view
-        #await page.update()  # Await page.update() <---- NO AWAIT HERE
-        page.update() # <--- CORRECTED
-        error_text.value = ""  # Clear any previous error
+            await user_view(page, user_info)
+            
+        page.update()  # Remove await here
+        error_text.value = ""
     else:
-        error_text.value = "Invalid username or password"  # Set the error message
-        await page.update() # Await page.update() for errors
+        error_text.value = "Invalid username or password"
+        page.update()  # Remove await here
 

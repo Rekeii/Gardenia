@@ -1,14 +1,21 @@
 import flet as ft
 from controllers.login_controller import LoginController
 from controllers.plant_controller import PlantController
+from controllers.volunteer_controller import VolunteerController
 from models.plant_model import PlantModel, PlantHealth
+from models.volunteer_model import Volunteer, TaskStatus  # Add TaskStatus here
 from views.plant_log_view import plant_log_view
-from views.addplant_view import addplant_view  
 from views.inventory_view import inventory_view
 import asyncio
 
-
 async def user_view(page: ft.Page, user_data):
+    # Ensure user_data contains '_id'
+    if '_id' not in user_data:
+        raise KeyError("Volunteer ID '_id' not found in user_data")
+
+    volunteer_id = user_data['_id']
+    print(f"Volunteer ID: {volunteer_id}")  # Debug print statement
+
     page.data = {"user_data": user_data}
     page.theme_mode = 'dark'
 
@@ -216,8 +223,85 @@ async def user_view(page: ft.Page, user_data):
             page.views.pop()
         await login_view(page) # type: ignore
         page.update()
+      
+      
+    # TASKS USER_TAB  
+    volunteer_controller = VolunteerController()
+    tasks = await volunteer_controller.get_volunteer_tasks(volunteer_id)
 
-    user_tab = ft.Column(
+    # Separate tasks into pending and completed
+    pending_tasks = [task for task in tasks if task.status != TaskStatus.Completed.value]
+    completed_tasks = [task for task in tasks if task.status == TaskStatus.Completed.value]
+
+    async def handle_complete_task(e, task_id: str):
+        success, msg = await volunteer_controller.mark_task_complete(task_id)
+        if success:
+            # Simply update the page route to refresh
+            page.go("/user")
+            page.update()
+
+    # Create lists for pending and completed tasks
+    pending_task_buttons = []
+    for task in pending_tasks:
+        task_id = str(task._id)
+        button = ft.ElevatedButton(
+            text=task.taskName,
+            color="#77DD77",
+            on_click=lambda e, tid=task_id: asyncio.run(handle_complete_task(e, tid)),  # Changed this line
+            style=ft.ButtonStyle(
+                padding=10,
+                bgcolor="#192142",
+                shape=ft.RoundedRectangleBorder(radius=10),
+            )
+        )
+        pending_task_buttons.append(button)
+
+    completed_task_texts = []
+    for task in completed_tasks:
+        text = ft.Text(
+            f"✓ {task.taskName}",
+            color="#4CAF50",
+            size=16,
+            italic=True
+        )
+        completed_task_texts.append(text)
+
+    # Construct the dynamic task list UI with two sections
+    user_tasks = ft.Column(
+        [
+            ft.Text("TASK LIST", size=50, weight=ft.FontWeight.BOLD, color='#77DD77'),
+            ft.Container(
+                ft.Column(
+                    [
+                        ft.Text("Pending Tasks", size=24, weight=ft.FontWeight.BOLD, color='#77DD77'),
+                        ft.Column(
+                            pending_task_buttons,
+                            spacing=10,
+                            scroll=ft.ScrollMode.AUTO
+                        ) if pending_task_buttons else ft.Text("No pending tasks", color='white', italic=True),
+                        ft.Divider(height=2, color='#77DD77'),
+                        ft.Text("Completed Tasks", size=24, weight=ft.FontWeight.BOLD, color='#77DD77'),
+                        ft.Column(
+                            completed_task_texts,
+                            spacing=10,
+                            scroll=ft.ScrollMode.AUTO
+                        ) if completed_task_texts else ft.Text("No completed tasks", color='white', italic=True),
+                    ],
+                    spacing=20,
+                    horizontal_alignment=ft.CrossAxisAlignment.START
+                ),
+                bgcolor="#181d30",
+                padding=20,
+                border_radius=10,
+                expand=True
+            ),
+        ],
+        alignment=ft.MainAxisAlignment.CENTER,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER
+    )
+    
+    
+    user_settings = ft.Column(
         [
             welcome_msg,
             ft.Text(value="\n"),
@@ -231,9 +315,26 @@ async def user_view(page: ft.Page, user_data):
             ),
             result
         ],
-        alignment=ft.MainAxisAlignment.CENTER,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER
+        alignment=ft.MainAxisAlignment.CENTER,  # Vertical center
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,  # Horizontal center
+        expand=True  # Allow column to expand and take available space
     )
+
+    # Update the container to center its content
+    user_tab = ft.Row([
+        ft.Container(
+            user_settings,
+            bgcolor="#192142",
+            expand=True,
+            alignment=ft.alignment.center  # Center the content within container
+        ), 
+        ft.Container(
+            ft.Container(user_tasks, bgcolor="#192142", expand=True),
+            padding=30,
+            expand=True
+        )
+    ], spacing=10)
+
     
     inventory_tab = await inventory_view(page, user_data)
     
