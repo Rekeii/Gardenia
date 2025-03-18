@@ -57,9 +57,10 @@ class Task:
         )
 
 class Volunteer:
-    def __init__(self, name: str, specialization: Specialization,
+    def __init__(self, user: str, name: str, specialization: Specialization,
                  tasks_assigned: Optional[List[str]] = None,
                  _id: Optional[ObjectId] = None):
+        self.user = user
         self.name = name
         self.specialization = specialization
         self.tasks_assigned = tasks_assigned or []
@@ -73,8 +74,9 @@ class Volunteer:
 
     def to_dict(self) -> Dict:
         data = {
+            "user": self.user,
             "name": self.name,
-            "specializations": self.specialization.value,  # Store lowercase
+            "specializations": self.specialization.value,
             "tasks_assigned": self.tasks_assigned,
         }
         if self._id:
@@ -84,8 +86,9 @@ class Volunteer:
     @classmethod
     def from_dict(cls, data: Dict):
         return Volunteer(
+            user=data.get('user', ""),
             name=data.get('name', "Unknown volunteer"),
-            specialization=Specialization(data.get('specializations', 'versatile').lower()),  # Lowercase here
+            specialization=Specialization(data.get('specializations', 'versatile').lower()),
             tasks_assigned=data.get('tasks_assigned', []),
             _id=data.get('_id')
         )

@@ -10,23 +10,18 @@ class VolunteerController:
         self.volunteers_collection = self.mongodb_client.volunteers_collection
         self.tasks_collection = self.mongodb_client.tasks_collection
 
-    async def add_volunteer(self, name: str, specialization: str) -> tuple[bool, str]:
+    async def add_volunteer(self, user: str, name: str, specialization: str) -> tuple[bool, str]:
         loop = asyncio.get_running_loop()
         try:
-            # Create the Volunteer object, handling potential ValueError
-            try:
-                specialization_enum = Specialization(specialization.lower()) #convert to lowercase
-            except ValueError:
-                return False, f"Invalid specialization: {specialization}"
-
-            volunteer = Volunteer(name=name, specialization=specialization_enum)
-            volunteer_dict = volunteer.to_dict()
-
-            result = await loop.run_in_executor(None, self.volunteers_collection.insert_one, volunteer_dict)
-            return True, f"Volunteer '{name}' added successfully. ID: {result.inserted_id}"
+            specialization_enum = Specialization(specialization.lower())
+            volunteer = Volunteer(user=user, name=name, specialization=specialization_enum)
+            result = await loop.run_in_executor(None, self.volunteers_collection.insert_one, volunteer.to_dict())
+            return True, f"Volunteer added with ID: {result.inserted_id}"
+        except ValueError as e:
+            return False, f"Invalid specialization: {e}"
         except Exception as e:
             return False, str(e)
-
+        
     async def remove_volunteer(self, volunteer_id: str) -> tuple[bool, str]:
         loop = asyncio.get_running_loop()
         try:

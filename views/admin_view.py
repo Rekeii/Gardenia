@@ -118,56 +118,55 @@ async def admin_view(page: ft.Page, user_info=None):
     
     async def create_user_handler(e):
         if not all([txt_username.value, txt_password.value, txt_name.value, specialization_dropdown.value]):
-            result_text.value = "Please fill in all fields."
-            await e.page.update()
+            result_text.value = "All fields are required."
+            page.update()  # Remove 'await' here
             return
 
-        user_model = UserModel()
         username = txt_username.value
         password = txt_password.value
         name = txt_name.value
-         # Keep specialization lowercase for consistency with the enum
         specialization = specialization_dropdown.value.lower()
         is_admin = chk_is_admin.value
         role = 'admin' if is_admin else 'volunteer'
 
-        success, message = user_model.create_user(username, password, name, specialization, role)
-        result_text.value = message
-
+        try:
+            success, message = user_model.create_user(username, password, name, specialization, role)
+            result_text.value = message
+        except Exception as err:
+            print(f"Failed to create user: {err}")
+            success = False
+            message = f"Error creating user: {err}"
+            result_text.value = message
         
         if success:
-             # Clear the input fields on successful user creation
+            # Reset form fields
             txt_username.value = ""
             txt_password.value = ""
             txt_name.value = ""
             specialization_dropdown.value = None
-            chk_is_admin.value = False  # Reset the checkbox
+            chk_is_admin.value = False
 
-        # Refresh volunteer data if creation was successful
-        if success:
-            nonlocal volunteers, volunteer_table
+            # Refresh volunteer table data
             volunteers = await volunteer_controller.get_all_volunteers()
-            volunteer_table.rows.clear()  # Clear existing rows
-
-
+            volunteer_table.rows.clear()
             for volunteer in volunteers:
-                login_info = user_model.login_collection.find_one({"user": volunteer.name.split(" ")[0] if volunteer.name else "N/A"}) #added condition
-                username = login_info.get("user", "N/A") if login_info else "N/A"
                 tasks = await volunteer_controller.get_volunteer_tasks(str(volunteer._id))
                 task_names = ", ".join([task.taskName for task in tasks]) if tasks else "No tasks assigned"
-                specialization_display = volunteer.specialization.value.capitalize()
-
                 volunteer_table.rows.append(
                     ft.DataRow(
                         cells=[
-                            ft.DataCell(ft.Text(username)),
+                            ft.DataCell(ft.Text(volunteer.user)),
                             ft.DataCell(ft.Text(volunteer.name)),
-                            ft.DataCell(ft.Text(specialization_display)),
+                            ft.DataCell(ft.Text(volunteer.specialization.value.capitalize())),
                             ft.DataCell(ft.Text(task_names)),
                         ]
                     )
                 )
-        await e.page.update()
+
+        # Update the page after changes
+        page.update()  # Remove 'await' here
+    # Use the outer page variable here
+
 
 
 
