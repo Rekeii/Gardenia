@@ -32,6 +32,7 @@ class VolunteerController:
                 return False, "Volunteer not found."
         except Exception as e:
             return False, str(e)
+        
     async def get_volunteer(self, volunteer_id: str) -> Optional[Volunteer]:
         loop = asyncio.get_running_loop()
         try:
@@ -83,8 +84,6 @@ class VolunteerController:
     async def get_volunteer_tasks(self, volunteer_id: str) -> List[Task]:
         loop = asyncio.get_running_loop()
         try:
-            tasks = []
-
             volunteer = await self.get_volunteer(volunteer_id)
             if not volunteer:
                 return []
@@ -93,7 +92,8 @@ class VolunteerController:
                 None,
                 self.tasks_collection.find,
                 {'_id': {'$in': [ObjectId(task_id) for task_id in volunteer.tasks_assigned]}}
-            )            
+            )
+            tasks = []
             for task_data in cursor:
                 tasks.append(Task.from_dict(task_data))
             return tasks
@@ -101,15 +101,50 @@ class VolunteerController:
             print(f"Error: {e}")
             return []
 
+
     async def add_task(self, taskName: str, frequency: str, assignedVolunteerId: Optional[str] = None) -> tuple[bool, str]:
         loop = asyncio.get_running_loop()
         try:
-            task = Task(taskName=taskName, frequency=Frequency(frequency), assignedVolunteerId=assignedVolunteerId)
+            # Create the Task object
+            task = Task(
+                taskName=taskName,
+                frequency=Frequency(frequency),
+                assignedVolunteerId=assignedVolunteerId
+            )
             task_dict = task.to_dict()
-            result = await loop.run_in_executor(None, self.tasks_collection.insert_one, task_dict)
-            return True, f"Task '{taskName}' added successfully. ID: {result.inserted_id}"
+
+            # Insert the task into the tasks collection
+            task_result = await loop.run_in_executor(
+                None,
+                self.tasks_collection.insert_one,
+                task_dict
+            )
+            task_id = str(task_result.inserted_id)
+
+            if assignedVolunteerId is not None:
+                # Update the volunteer's tasks_assigned array
+                volunteer_update = await loop.run_in_executor(
+                    None,
+                    self.volunteers_collection.update_one,
+                    {'_id': ObjectId(assignedVolunteerId)},
+                    {'$push': {'tasks_assigned': task_id}}
+                )
+
+                if volunteer_update.modified_count != 1:
+                    # Rollback if volunteer update failed
+                    await loop.run_in_executor(
+                        None,
+                        self.tasks_collection.delete_one,
+                        {'_id': task_result.inserted_id}
+                    )
+                    return False, "Failed to assign task to volunteer"
+
+            return True, f"Task '{taskName}' added successfully. ID: {task_id}"
+
         except Exception as e:
             return False, str(e)
+
+
     async def get_task(self, taskID) -> Optional[Task]:
         loop = asyncio.get_running_loop()
         try:
@@ -120,6 +155,7 @@ class VolunteerController:
         except Exception as e:
             print(f"Error retrieving task document: {e}")
             return None
+        
     async def get_all_tasks(self) -> List[Task]:
             loop = asyncio.get_running_loop()
             try:

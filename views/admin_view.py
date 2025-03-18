@@ -4,6 +4,7 @@ from controllers.volunteer_controller import VolunteerController
 from controllers.plant_controller import PlantController
 from models.plant_model import PlantModel, PlantType, PlantHealth
 from models.volunteer_model import Volunteer, Specialization
+from views.tasks_view import tasks_view
 import asyncio
 
 async def admin_view(page: ft.Page, user_info=None):
@@ -167,7 +168,8 @@ async def admin_view(page: ft.Page, user_info=None):
         page.update()  # Remove 'await' here
     # Use the outer page variable here
 
-
+    # Tasks Tab
+    tasks_tab_content = await tasks_view(page, volunteer_controller)
 
 
     user_tab = ft.Row(
@@ -205,6 +207,7 @@ async def admin_view(page: ft.Page, user_info=None):
             ft.Tab(text="Volunteers", icon="PEOPLE", content=volunteer_tab),
             ft.Tab(text="Create User", icon="PERSON_ADD", content=user_tab),
             ft.Tab(text="Plants", icon="GRASS", content=plant_tab),
+            ft.Tab(text="Tasks", icon="TASK", content=tasks_tab_content),
         ],
         expand=1,
     )
