@@ -10,10 +10,7 @@
 - **Schedule Management**: Organize and assign tasks (e.g., planting, watering, pruning, harvesting).
 - **Plant Care Tracking**: Monitor crop status based on environmental factors and volunteer logs.
 - **Inventory Management**: Track gardening tools, seeds, compost, and other resources.
-- **Harvest Distribution**: Efficiently divide harvested crops among beneficiaries.
 
-> [!CAUTION] 
-> **Note,** currently, the program ONLY includes a **Login System** that authenticates users and displays basic volunteer information upon successful login, AND a simple plant management system.
 
 ---
 
@@ -110,14 +107,11 @@ Welcome, Mikz Lugtu!
 Specialization: Floriculture
 
 
+
 > [!NOTE] For admin:
 > username: admin
 > password: admin
-
+>
 
 
 ---
-
-## Roadmap of functions:
-- Implement admin and volunteer roles with distinct functionalities.
-- Add additional features like task scheduling, inventory management, and harvest distribution.
