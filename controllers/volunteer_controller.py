@@ -6,7 +6,7 @@ from typing import List, Optional, Dict
 from datetime import datetime
 from controllers.inventory_controller import InventoryController
 from controllers.harvest_controller import HarvestController
-from models.inventory_model import InventoryModel  # Add this import if not present
+from models.inventory_model import InventoryModel
 
 class VolunteerController:
     def __init__(self):
@@ -118,7 +118,6 @@ class VolunteerController:
     async def add_task(self, taskName: str, frequency: str, assignedVolunteerId: Optional[str] = None) -> tuple[bool, str]:
         loop = asyncio.get_running_loop()
         try:
-            # Create the Task object
             task = Task(
                 taskName=taskName,
                 frequency=Frequency(frequency),
@@ -126,7 +125,6 @@ class VolunteerController:
             )
             task_dict = task.to_dict()
 
-            # Insert the task into the tasks collection
             task_result = await loop.run_in_executor(
                 None,
                 self.tasks_collection.insert_one,
@@ -135,7 +133,6 @@ class VolunteerController:
             task_id = str(task_result.inserted_id)
 
             if assignedVolunteerId is not None:
-                # Update the volunteer's tasks_assigned array
                 volunteer_update = await loop.run_in_executor(
                     None,
                     self.volunteers_collection.update_one,
@@ -144,7 +141,6 @@ class VolunteerController:
                 )
 
                 if volunteer_update.modified_count != 1:
-                    # Rollback if volunteer update failed
                     await loop.run_in_executor(
                         None,
                         self.tasks_collection.delete_one,
@@ -187,14 +183,12 @@ class VolunteerController:
             if not task:
                 return False, "Task not found"
 
-            # Check if this is a harvest task
-            if task.plant_id:  # If task has associated plant
+            if task.plant_id:
                 harvest_controller = HarvestController()
                 success, msg = await harvest_controller.mark_ready_for_harvest(task.plant_id)
                 if not success:
                     return False, f"Failed to process harvest: {msg}"
 
-            # Mark task as complete
             loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(
                 None,

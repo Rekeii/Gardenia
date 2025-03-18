@@ -1,4 +1,3 @@
-# controllers/seed_controller.py
 from models.seed_model import SeedModel
 from models.mongodb_client import MongoDBClient
 from bson import ObjectId
@@ -8,7 +7,7 @@ import asyncio, datetime
 class SeedServiceController:
     def __init__(self):
         self.mongodb_client = MongoDBClient()
-        self.inventory_collection = self.mongodb_client.inventory_collection  # Use inventory
+        self.inventory_collection = self.mongodb_client.inventory_collection
 
     async def add_seed(self, name: str, quantity: int, updated_by: str) -> tuple[bool, str]:
 
@@ -18,9 +17,7 @@ class SeedServiceController:
             seed_dict["item_type"] = "seed"
             seed_dict["updated_by"] = updated_by
             seed_dict["last_updated"] = datetime.datetime.now()
-            seed_dict['condition'] = "available"  # Use the expanded condition
-            # seed_dict['status'] = 'available' # removed
-
+            seed_dict['condition'] = "available"
             await self.inventory_collection.insert_one(seed_dict)
             return True, f"Seed '{name}' added."
         except Exception as e:
@@ -58,8 +55,8 @@ class SeedServiceController:
 
     async def get_all_seeds(self) -> List[SeedModel]:
         seeds = []
-        cursor = self.inventory_collection.find({"item_type": "seed"})  # No await needed
-        for seed in cursor: # regular for-loop
+        cursor = self.inventory_collection.find({"item_type": "seed"})
+        for seed in cursor:
             seeds.append(SeedModel.from_dict(seed))
         return seeds
 

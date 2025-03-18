@@ -1,6 +1,4 @@
-#inventory_controller
-# controllers/inventory_controller.py
-from models.inventory_model import InventoryModel  # Update this import
+from models.inventory_model import InventoryModel
 from models.mongodb_client import MongoDBClient
 from bson import ObjectId
 from datetime import datetime
@@ -21,7 +19,6 @@ class InventoryController:
                 last_updated=datetime.now(),
                 updated_by=updated_by
             )
-            # Remove 'await' since this is synchronous
             self.inventory_collection.insert_one(new_item.to_dict())
             return True, "Item added successfully"
         except Exception as e:
@@ -30,7 +27,6 @@ class InventoryController:
 
     def update_item(self, item_id: str, **kwargs) -> tuple[bool, str]:
         try:
-            # Build update dictionary with only provided values
             update_data = {"$set": {}}
             
             if "name" in kwargs:
@@ -42,7 +38,6 @@ class InventoryController:
             if "condition" in kwargs:
                 update_data["$set"]["condition"] = kwargs["condition"]
             
-            # Always update these fields
             update_data["$set"].update({
                 "last_updated": datetime.now(),
                 "updated_by": kwargs.get("updated_by", "")

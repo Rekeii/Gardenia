@@ -15,7 +15,6 @@ class HarvestController:
             if not plant:
                 return False, "Plant not found"
 
-            # Create harvest inventory entry
             inventory_controller = InventoryController()
             success, msg = inventory_controller.add_item(
                 name=f"{plant.name} Harvest",
@@ -29,7 +28,6 @@ class HarvestController:
             if not success:
                 return False, f"Failed to add harvest to inventory: {msg}"
 
-            # Update plant status to harvested
             result = await self.plants_collection.update_one(
                 {'_id': ObjectId(plant_id)},
                 {'$set': {'health_status': PlantHealth.HARVESTED.value}}
@@ -44,7 +42,6 @@ class HarvestController:
 
     async def distribute_harvest(self, plant_id: str) -> tuple[bool, str]:
         try:
-            # Update harvest record
             harvest = await self.harvests_collection.find_one({'plant_id': plant_id, 'distribution_status': 'pending'})
             if not harvest:
                 return False, "No pending harvest found for this plant."
