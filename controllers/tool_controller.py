@@ -1,4 +1,3 @@
-# controllers/tool_controller.py
 from models.tool_model import ToolModel, ToolCondition
 from models.mongodb_client import MongoDBClient
 from bson import ObjectId
@@ -8,18 +7,16 @@ import asyncio, datetime
 class ToolServiceController:
     def __init__(self):
         self.mongodb_client = MongoDBClient()
-        self.inventory_collection = self.mongodb_client.inventory_collection  # Use inventory
+        self.inventory_collection = self.mongodb_client.inventory_collection
 
     async def add_tool(self, name: str, condition: ToolCondition, updated_by: str) -> tuple[bool, str]:
         try:
             tool = ToolModel(name=name, condition=condition)
             tool_dict = tool.to_dict()
-            tool_dict["item_type"] = "tool"  # Use item_type
+            tool_dict["item_type"] = "tool"
             tool_dict["updated_by"] = updated_by
             tool_dict["last_updated"] = datetime.datetime.now()
-            tool_dict["condition"] = condition.value  # Use condition.value
-            # tool_dict["status"] = condition.value # Status removed use only condition
-
+            tool_dict["condition"] = condition.value
             await self.inventory_collection.insert_one(tool_dict)
             return True, f"Tool '{name}' added."
         except Exception as e:
@@ -40,8 +37,8 @@ class ToolServiceController:
 
     async def get_all_tools(self) -> List[ToolModel]:
         tools = []
-        cursor =  self.inventory_collection.find({"item_type": "tool"}) # cursor and no awiat
-        for tool in cursor: # Regular for loop
+        cursor =  self.inventory_collection.find({"item_type": "tool"})
+        for tool in cursor:
             tools.append(ToolModel.from_dict(tool))
         return tools
     

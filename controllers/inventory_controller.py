@@ -1,5 +1,3 @@
-#inventory_controller
-# controllers/inventory_controller.py
 from models.inventory_model import InventoryModel
 from models.mongodb_client import MongoDBClient
 from bson import ObjectId
@@ -21,7 +19,6 @@ class InventoryController:
                 last_updated=datetime.now(),
                 updated_by=updated_by
             )
-            # Remove 'await' since this is synchronous
             self.inventory_collection.insert_one(new_item.to_dict())
             return True, "Item added successfully"
         except Exception as e:
@@ -30,12 +27,8 @@ class InventoryController:
 
     def update_item(self, item_id: str, **kwargs) -> tuple[bool, str]:
         try:
-            update_data = {
-                "$set": {
-                    "last_updated": datetime.now(),
-                    "updated_by": kwargs.get("updated_by", "")
-                }
-            }
+            update_data = {"$set": {}}
+            
             if "name" in kwargs:
                 update_data["$set"]["name"] = kwargs["name"]
             if "item_type" in kwargs:
@@ -44,12 +37,22 @@ class InventoryController:
                 update_data["$set"]["quantity"] = kwargs["quantity"]
             if "condition" in kwargs:
                 update_data["$set"]["condition"] = kwargs["condition"]
+            
+            update_data["$set"].update({
+                "last_updated": datetime.now(),
+                "updated_by": kwargs.get("updated_by", "")
+            })
 
-            self.inventory_collection.update_one(
+            result = self.inventory_collection.update_one(
                 {"_id": ObjectId(item_id)},
                 update_data
             )
-            return True, "Item updated successfully"
+
+            if result.modified_count > 0:
+                return True, "Item updated successfully"
+            else:
+                return False, "No changes made or item not found"
+                
         except Exception as e:
             return False, str(e)
 

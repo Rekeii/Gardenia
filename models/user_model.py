@@ -1,5 +1,6 @@
 #user_model
 from models.mongodb_client import MongoDBClient
+from models.volunteer_model import Specialization
 
 class UserModel:
     def __init__(self):
@@ -41,37 +42,35 @@ class UserModel:
 
     def create_user(self, username, password, name, specialization, role):
         try:
-            # Check if the username already exists in login or volunteers
+            # Check if username exists in either collection
             if self.login_collection.find_one({'user': username}) or self.volunteers_collection.find_one({'user': username}):
                 return False, "Username already exists."
 
             # Validate specialization for volunteers
-            valid_specializations = ["Pomology", "Olericulture", "Floriculture", "Landscaping", "PlantationCrops", "Versatile"]
+            valid_specializations = [s.value for s in Specialization]
             if role == 'volunteer' and specialization not in valid_specializations:
                 return False, "Invalid specialization."
 
-            # Create user in login collection
-            login_doc = {
+            # Insert into login collection
+            self.login_collection.insert_one({
                 'user': username,
                 'password': password,
                 'role': role
-            }
-            self.login_collection.insert_one(login_doc)
+            })
 
-            # Create volunteer document if the role is volunteer
+            # Insert into volunteers collection if applicable
             if role == 'volunteer':
-                volunteer_doc = {
+                self.volunteers_collection.insert_one({
                     'user': username,
                     'name': name,
-                    'specializations': specialization 
-                }
-                self.volunteers_collection.insert_one(volunteer_doc)
+                    'specializations': specialization,
+                    'tasks_assigned': []
+                })
 
             return True, "User created successfully."
 
         except Exception as e:
-            print(f"Error creating user: {str(e)}")
-            return False, f"Failed to create user: {str(e)}"
+            return False, f"Error creating user: {str(e)}"
 
     def update_password(self, username: str, new_password: str) -> tuple[bool, str]:
         """Update password in database"""

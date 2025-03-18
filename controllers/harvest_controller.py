@@ -1,6 +1,7 @@
 from models.harvest_model import HarvestModel
 from models.plant_model import PlantModel, PlantHealth
 from models.mongodb_client import MongoDBClient
+from controllers.inventory_controller import InventoryController
 
 class HarvestController:
     def __init__(self):
@@ -10,33 +11,37 @@ class HarvestController:
 
     async def mark_ready_for_harvest(self, plant_id: str) -> tuple[bool, str]:
         try:
-            # Update plant health status
-            plant_controller = PlantController()
-            success, message = await plant_controller.update_plant_health(plant_id, PlantHealth.ReadyForHarvest)
-            if not success:
-                return False, message
-
-            # Create harvest record
-            plant = await plant_controller.get_plant_by_id(plant_id)
+            plant = await self.get_plant_by_id(plant_id)
             if not plant:
-                return False, "Plant not found."
+                return False, "Plant not found"
 
-            harvest = HarvestModel(
-                plant_id=plant_id,
-                harvest_date=datetime.now(),
-                quantity=1
+            inventory_controller = InventoryController()
+            success, msg = inventory_controller.add_item(
+                name=f"{plant.name} Harvest",
+                item_type="harvest",
+                quantity=1,
+                condition="Fresh",
+                plant_source=plant.name,
+                harvest_date=datetime.now()
             )
-            result = await self.harvests_collection.insert_one(harvest.to_dict())
-            if result.inserted_id:
-                return True, f"Plant '{plant.name}' marked ready for harvest."
-            return False, "Failed to create harvest record."
+            
+            if not success:
+                return False, f"Failed to add harvest to inventory: {msg}"
+
+            result = await self.plants_collection.update_one(
+                {'_id': ObjectId(plant_id)},
+                {'$set': {'health_status': PlantHealth.HARVESTED.value}}
+            )
+
+            if result.modified_count == 1:
+                return True, "Plant harvested successfully"
+            return False, "Failed to update plant status"
 
         except Exception as e:
             return False, str(e)
 
     async def distribute_harvest(self, plant_id: str) -> tuple[bool, str]:
         try:
-            # Update harvest record
             harvest = await self.harvests_collection.find_one({'plant_id': plant_id, 'distribution_status': 'pending'})
             if not harvest:
                 return False, "No pending harvest found for this plant."
