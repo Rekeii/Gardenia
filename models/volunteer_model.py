@@ -25,15 +25,22 @@ class Task:
     def __init__(self, taskName: str, frequency: Frequency,
                  assignedVolunteerId: Optional[str] = None,
                  status: TaskStatus = TaskStatus.Pending,
+                 plant_id: Optional[str] = None,  # Add plant reference
+                 created_at: Optional[datetime] = None,
+                 completed_at: Optional[datetime] = None,
                  _id: Optional[ObjectId] = None):
         self.taskName = taskName
         self.frequency = frequency
         self.assignedVolunteerId = assignedVolunteerId
         self.status = status
+        self.plant_id = plant_id
+        self.created_at = created_at or datetime.now()
+        self.completed_at = completed_at
         self._id = _id
 
     def markComplete(self):
         self.status = TaskStatus.Completed
+        self.completed_at = datetime.now()
 
     def to_dict(self) -> Dict:
         data = {
@@ -41,19 +48,23 @@ class Task:
             "frequency": self.frequency.value,
             "assignedVolunteerId": self.assignedVolunteerId,
             "status": self.status.value,
+            "created_at": self.created_at,
+            "completed_at": self.completed_at
         }
         if self._id:
             data['_id'] = self._id
         return data
 
     @classmethod
-    def from_dict(cls, data:Dict):
-        return Task(
-            taskName = data.get('taskName', 'Unknown Task'),
-            frequency= Frequency(data.get('frequency', 'daily')),
-            assignedVolunteerId = data.get('assignedVolunteerId'),
-            status = TaskStatus(data.get('status', 'Pending')),
-            _id = data.get('_id')
+    def from_dict(cls, data: Dict):
+        return cls(
+            taskName=data.get('taskName', 'Unknown Task'),
+            frequency=Frequency(data.get('frequency', 'daily')),
+            assignedVolunteerId=data.get('assignedVolunteerId'),
+            status=TaskStatus(data.get('status', 'Pending')),
+            created_at=data.get('created_at'),
+            completed_at=data.get('completed_at'),
+            _id=data.get('_id')
         )
 
 class Volunteer:

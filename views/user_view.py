@@ -3,10 +3,12 @@ from controllers.login_controller import LoginController
 from controllers.plant_controller import PlantController
 from controllers.volunteer_controller import VolunteerController
 from models.plant_model import PlantModel, PlantHealth
-from models.volunteer_model import Volunteer, TaskStatus  # Add TaskStatus here
+from models.volunteer_model import Volunteer, TaskStatus
 from views.plant_log_view import plant_log_view
 from views.inventory_view import inventory_view
+from views.addplant_view import addplant_view  # Make sure this import is here
 import asyncio
+from controllers.weather_controller import WeatherController
 
 async def user_view(page: ft.Page, user_data):
     # Ensure user_data contains '_id'
@@ -137,13 +139,14 @@ async def user_view(page: ft.Page, user_data):
     
     async def route_change(e):
         if page.route == "/add_plant":
-            await addplant_view(page)
-        elif page.route == "/add_item":  # Add this line
-            await additem_view(page, user_data)  # type: ignore # Adjust as needed
+            add_view = await addplant_view(page)  # Store the returned view
+            page.views.append(add_view)  # Append the view
+            await page.update_async()  # Update the page
         elif page.route == "/user":
             await user_view(page, user_data)
         page.update()
 
+    page.on_route_change = route_change
 
     def view_pop(e):
         page.views.pop()
@@ -166,11 +169,16 @@ async def user_view(page: ft.Page, user_data):
     page.on_route_change = route_change
 
     # Add "Plant Seed" button
+    async def go_to_add_plant(e):
+        add_view = await addplant_view(page)
+        page.views.append(add_view)
+        await page.update_async()
+
     plant_seed = ft.FilledButton(
         text="Plant Seed",
         bgcolor='#9ae69a',
         icon='add',
-        on_click=lambda _: page.go("/add_plant")
+        on_click=lambda _: page.go("/add_plant")  # Direct route navigation
     )
 
     plant_table.rows.append(
@@ -244,26 +252,51 @@ async def user_view(page: ft.Page, user_data):
     pending_task_buttons = []
     for task in pending_tasks:
         task_id = str(task._id)
-        button = ft.ElevatedButton(
-            text=task.taskName,
-            color="#77DD77",
-            on_click=lambda e, tid=task_id: asyncio.run(handle_complete_task(e, tid)),  # Changed this line
-            style=ft.ButtonStyle(
-                padding=10,
-                bgcolor="#192142",
-                shape=ft.RoundedRectangleBorder(radius=10),
+        created_date = task.created_at.strftime("%Y-%m-%d %H:%M") if task.created_at else "Unknown"
+        button_container = ft.Column([
+            ft.ElevatedButton(
+                text=task.taskName,
+                color="#77DD77",
+                on_click=lambda e, tid=task_id: asyncio.run(handle_complete_task(e, tid)),
+                style=ft.ButtonStyle(
+                    padding=10,
+                    bgcolor="#192142",
+                    shape=ft.RoundedRectangleBorder(radius=10),
+                )
+            ),
+            ft.Text(
+                f"Created: {created_date}",
+                color="#808080",
+                size=12,
+                italic=True
             )
-        )
-        pending_task_buttons.append(button)
+        ])
+        pending_task_buttons.append(button_container)
 
     completed_task_texts = []
     for task in completed_tasks:
-        text = ft.Text(
-            f"✓ {task.taskName}",
-            color="#4CAF50",
-            size=16,
-            italic=True
-        )
+        completed_date = task.completed_at.strftime("%Y-%m-%d %H:%M") if task.completed_at else "Unknown"
+        created_date = task.created_at.strftime("%Y-%m-%d %H:%M") if task.created_at else "Unknown"
+        text = ft.Column([
+            ft.Text(
+                f"✓ {task.taskName}",
+                color="#4CAF50",
+                size=16,
+                italic=True
+            ),
+            ft.Text(
+                f"Created: {created_date}",
+                color="#808080",
+                size=12,
+                italic=True
+            ),
+            ft.Text(
+                f"Completed: {completed_date}",
+                color="#808080",
+                size=12,
+                italic=True
+            ),
+        ])
         completed_task_texts.append(text)
 
     # Construct the dynamic task list UI with two sections
@@ -300,12 +333,27 @@ async def user_view(page: ft.Page, user_data):
         horizontal_alignment=ft.CrossAxisAlignment.CENTER
     )
     
+    weather_controller = WeatherController()
+    weather_text = ft.Text("Loading weather...", color='white', size=16)
+
+    async def update_weather():
+        try:
+            weather = await weather_controller.get_current_weather()
+            weather_text.value = f"Current weather: {weather.condition}, {weather.temperature}°C, Precipitation: {weather.precipitation}mm"
+            page.update()
+        except Exception as e:
+            weather_text.value = "Weather data unavailable"
+            print(f"Weather error: {str(e)}")
+            page.update()
+
+    await update_weather()
     
     user_settings = ft.Column(
         [
             welcome_msg,
             ft.Text(value="\n"),
             specialization_msg,
+            weather_text,  # Add weather display
             ft.Text(value="\n\n"),
             txt_new_password,
             ft.ElevatedButton(

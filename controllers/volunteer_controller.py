@@ -3,6 +3,10 @@ from models.mongodb_client import MongoDBClient
 from bson import ObjectId
 import asyncio
 from typing import List, Optional, Dict
+from datetime import datetime
+from controllers.inventory_controller import InventoryController
+from controllers.harvest_controller import HarvestController
+from models.inventory_model import InventoryModel  # Add this import if not present
 
 class VolunteerController:
     def __init__(self):
@@ -84,7 +88,7 @@ class VolunteerController:
                 {'$set': {'assignedVolunteerId': volunteer_id}}
             )
 
-            if volunteer_update_result.modified_count == 1 and task_update_result.modified_count ==1 :
+            if volunteer_update_result.modified_count == 1 and task_update_result.modified_count == 1:
                 return True, "Task assigned successfully."
             else:
                 return False, "Failed to assign task. Volunteer or Task not found, or update failed."
@@ -178,20 +182,39 @@ class VolunteerController:
                 return []
 
     async def mark_task_complete(self, task_id: str) -> tuple[bool, str]:
-        loop = asyncio.get_running_loop()
         try:
+            task = await self.get_task(task_id)
+            if not task:
+                return False, "Task not found"
+
+            # Check if this is a harvest task
+            if task.plant_id:  # If task has associated plant
+                harvest_controller = HarvestController()
+                success, msg = await harvest_controller.mark_ready_for_harvest(task.plant_id)
+                if not success:
+                    return False, f"Failed to process harvest: {msg}"
+
+            # Mark task as complete
+            loop = asyncio.get_running_loop()
             result = await loop.run_in_executor(
                 None,
                 self.tasks_collection.update_one,
                 {'_id': ObjectId(task_id)},
-                {'$set': {'status': TaskStatus.Completed.value}}
+                {
+                    '$set': {
+                        'status': TaskStatus.Completed.value,
+                        'completed_at': datetime.now()
+                    }
+                }
             )
+
             if result.modified_count == 1:
-                return True, "Task marked as complete."
-            return False, "Task not found or update failed."
+                return True, "Task completed successfully"
+            return False, "Failed to update task status"
+                
         except Exception as e:
             return False, str(e)
+
     async def close_connection(self) -> None:
         loop = asyncio.get_running_loop()
-
         await loop.run_in_executor(None, self.mongodb_client.close_connection)

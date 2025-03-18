@@ -5,6 +5,7 @@ import os
 from typing import Optional
 from datetime import datetime 
 import asyncio  # New addition: Importing asyncio
+from controllers.volunteer_controller import VolunteerController
 
 class PlantController:
     def __init__(self):
@@ -136,3 +137,27 @@ class PlantController:
         loop = asyncio.get_running_loop()
         # Use run_in_executor because close() is synchronous
         await loop.run_in_executor(None, self.mongodb_client.close_connection)
+
+    async def check_harvest_dates(self, last_logged_user: str) -> None:
+        """Check for plants ready to harvest and create harvest tasks"""
+        plants = await self.get_plants()
+        volunteer_controller = VolunteerController()
+        
+        for plant in plants:
+            if (plant.estimated_harvest_date 
+                and plant.estimated_harvest_date.date() <= datetime.now().date() 
+                and plant.health_status != PlantHealth.HARVESTED):
+                
+                # Create harvest task
+                task_name = f"Harvest {plant.name}"
+                success, msg = await volunteer_controller.add_task(
+                    taskName=task_name,
+                    frequency="once",
+                    assignedVolunteerId=last_logged_user,
+                    plant_id=str(plant._id)  # Store reference to plant
+                )
+                
+                if success:
+                    print(f"Created harvest task for {plant.name}")
+                else:
+                    print(f"Failed to create harvest task: {msg}")

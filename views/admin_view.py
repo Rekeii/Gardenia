@@ -3,7 +3,7 @@ from models.user_model import UserModel
 from controllers.volunteer_controller import VolunteerController
 from controllers.plant_controller import PlantController
 from models.plant_model import PlantModel, PlantType, PlantHealth
-from models.volunteer_model import Volunteer, Specialization
+from models.volunteer_model import Volunteer, Specialization, TaskStatus
 from views.tasks_view import tasks_view
 import asyncio
 
@@ -234,3 +234,56 @@ async def go_back(page: ft.Page):
     from views.login_view import login_view
     await login_view(page)
     page.update()
+
+# Modify the task table section in tasks_tab_content
+async def refresh_task_table(task_table, volunteers):
+    tasks = await volunteer_controller.get_all_tasks()
+    task_table.rows.clear()
+    
+    for task in tasks:
+        # Find assigned volunteer name
+        volunteer_name = "Unassigned"
+        if task.assignedVolunteerId:
+            volunteer = next(
+                (v for v in volunteers if str(v._id) == task.assignedVolunteerId),
+                None
+            )
+            volunteer_name = volunteer.name if volunteer else "Unknown"
+
+        # Only show non-completed tasks in admin view
+        if task.status != TaskStatus.Completed.value:
+            task_table.rows.append(
+                ft.DataRow(
+                    cells=[
+                        ft.DataCell(ft.Text(task.taskName)),
+                        ft.DataCell(ft.Text(task.frequency.value.title())),
+                        ft.DataCell(ft.Text(volunteer_name)),
+                        ft.DataCell(ft.Text(task.status.value)),
+                    ]
+                )
+            )
+
+# Update the volunteer table refresh function
+async def refresh_volunteer_table(volunteer_table):
+    volunteers = await volunteer_controller.get_all_volunteers()
+    volunteer_table.rows.clear()
+    
+    for volunteer in volunteers:
+        # Only get non-completed tasks
+        tasks = await volunteer_controller.get_volunteer_tasks(str(volunteer._id))
+        active_tasks = [task for task in tasks if task.status != TaskStatus.Completed.value]
+        task_names = ", ".join([task.taskName for task in active_tasks]) if active_tasks else "No active tasks"
+
+        login_info = user_model.login_collection.find_one({"user": volunteer.name.split(" ")[0] if volunteer.name else "N/A"})
+        username = login_info.get("user", "N/A") if login_info else "N/A"
+
+        volunteer_table.rows.append(
+            ft.DataRow(
+                cells=[
+                    ft.DataCell(ft.Text(username)),
+                    ft.DataCell(ft.Text(volunteer.name)),
+                    ft.DataCell(ft.Text(volunteer.specialization.value.capitalize())),
+                    ft.DataCell(ft.Text(task_names)),
+                ]
+            )
+        )
